@@ -27,6 +27,8 @@ export const Route = createFileRoute("/")({
         content:
           "Sistema para agências de eventos gerenciarem equipes freelancers: escala, check-in em campo, fechamento de horas e pagamento.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Landing,

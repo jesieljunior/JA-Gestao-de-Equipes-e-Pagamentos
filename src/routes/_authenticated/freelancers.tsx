@@ -39,6 +39,8 @@ export const Route = createFileRoute("/_authenticated/freelancers")({
         property: "og:description",
         content: "Equipe freelancer da agência: dados, função e chave Pix.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Freelancers,
