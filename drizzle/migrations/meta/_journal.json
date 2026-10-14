@@ -78,6 +78,13 @@
       "when": 1791574094550,
       "tag": "0010_billing_v2_limits_evidence_cycle",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791999447073,
+      "tag": "0011_enable_billing_scheduler",
+      "breakpoints": true
     }
   ]
 }

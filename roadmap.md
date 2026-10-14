@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Complete V2 plan controls, participation billing, immutable cycle prices, customer usage/invoices and master revenue views
+- [x] Complete V2 plan controls, participation billing, immutable cycle prices, customer usage/invoices and master revenue views
 - [ ] Activate verified Mercado Pago collection and reconciliation (requires credentials and provider homologation)
 - [x] Review and reconcile the user's manual changes before continuing test-access work
 - [x] Enforce role authorization on existing actions

@@ -122,10 +122,15 @@ function Agencias() {
       if (empresas.error) throw empresas.error;
       if (assinaturas.error) throw assinaturas.error;
       if (planos.error) throw planos.error;
+      const usos = await Promise.all(empresas.data.map(async (empresa) => {
+        const resultado = await supabase.rpc("resumo_uso_empresa", { _empresa_id: empresa.id });
+        return [empresa.id, resultado.data?.[0] ?? null] as const;
+      }));
       return {
         empresas: empresas.data,
         assinaturas: assinaturas.data,
         planos: planos.data,
+        usos: new Map(usos),
       };
     },
   });
@@ -181,6 +186,7 @@ function Agencias() {
     <ul className="space-y-3">
       {q.data.empresas.map((e) => {
         const a = q.data.assinaturas.find((x) => x.empresa_id === e.id);
+        const uso = q.data.usos.get(e.id);
         return (
           <li key={e.id} className="rounded-md border border-border bg-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -193,6 +199,7 @@ function Agencias() {
                 <p className="mt-1 text-xs text-muted-foreground">
                   Fiscal: {e.fiscal_status} · {[e.razao_social, e.municipio, e.uf].filter(Boolean).join(" · ") || "dados incompletos"}
                 </p>
+                {uso ? <p className="mt-1 text-xs text-muted-foreground">Ciclo atual: {uso.participacoes_usadas} participações · {uso.participacoes_excedentes} excedentes · {uso.clt_ativos} CLT ativos</p> : null}
               </div>
               <label className="flex items-center gap-2 text-xs">
                 Ativa
