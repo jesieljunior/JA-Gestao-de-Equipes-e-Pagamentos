@@ -15,6 +15,8 @@ import { calcularFechamento } from "@/lib/dominio";
 export const Route = createFileRoute("/_authenticated/relatorios")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Relatórios — PayCrew" },
       {
         name: "description",

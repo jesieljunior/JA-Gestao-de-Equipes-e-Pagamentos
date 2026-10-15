@@ -11,6 +11,8 @@ import { dataHora } from "@/lib/dominio";
 export const Route = createFileRoute("/_authenticated/operacao/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Operação em campo — PayCrew" },
       {
         name: "description",

@@ -13,6 +13,8 @@ import { carregarCobranca } from "@/lib/cobranca.functions";
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Painel da agência — PayCrew" },
       {
         name: "description",

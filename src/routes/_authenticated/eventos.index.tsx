@@ -32,6 +32,8 @@ import { dataHora, ORDEM_STATUS_EVENTO, ROTULO_STATUS_EVENTO } from "@/lib/domin
 export const Route = createFileRoute("/_authenticated/eventos/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Eventos — PayCrew" },
       {
         name: "description",

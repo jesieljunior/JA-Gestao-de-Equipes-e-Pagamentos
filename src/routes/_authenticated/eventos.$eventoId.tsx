@@ -47,6 +47,8 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/eventos/$eventoId")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Evento — PayCrew" },
       {
         name: "description",

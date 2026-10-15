@@ -17,6 +17,8 @@ export const Route = createFileRoute("/auth")({
   },
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Entrar no PayCrew" },
       {
         name: "description",
