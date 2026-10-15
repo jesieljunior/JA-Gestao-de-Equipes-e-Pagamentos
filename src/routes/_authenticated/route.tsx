@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated")({
 
     const { data: usuario } = await supabase
       .from("usuarios")
-      .select("empresa_id")
+      .select("empresa_id, ativo")
       .eq("id", data.user.id)
       .maybeSingle();
 
@@ -32,7 +32,15 @@ export const Route = createFileRoute("/_authenticated")({
       papeisPlataforma: (papeisPlataforma ?? []).map((r) => r.papel as string),
     });
 
-    const semEmpresa = !usuario?.empresa_id;
+    if (!usuario?.ativo) throw redirect({ to: "/auth" });
+    if (contexto.hasPlatformContext) {
+      const master = contexto.papeisPlataforma.includes("admin_master");
+      const permitida = location.pathname.startsWith("/suporte") || (master && (location.pathname.startsWith("/admin") || location.pathname.startsWith("/acessos-teste")));
+      if (!permitida) throw redirect({ to: master ? "/admin" : "/suporte" });
+      return { user: data.user, contexto };
+    }
+    if (location.pathname.startsWith("/admin") || location.pathname.startsWith("/suporte") || location.pathname.startsWith("/acessos-teste")) throw redirect({ to: "/painel" });
+    const semEmpresa = !contexto.organizationContext;
     const naOnboarding = location.pathname.startsWith("/onboarding");
     if (semEmpresa && !naOnboarding) throw redirect({ to: "/onboarding" });
     if (!semEmpresa && naOnboarding) throw redirect({ to: "/painel" });

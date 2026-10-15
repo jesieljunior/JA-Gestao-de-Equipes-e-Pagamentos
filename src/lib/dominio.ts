@@ -269,15 +269,15 @@ export function resolverContextoLegacy({
     (papel): papel is PapelPlataforma => papel === "admin_master" || papel === "suporte",
   );
 
-  const organizationContext = empresaId ? { empresaId } : null;
+  const organizationContext = empresaId && !papeisPlataformaValidados.length ? { empresaId } : null;
   const platformContext = papeisPlataformaValidados.length
     ? { papeis: papeisPlataformaValidados }
     : null;
 
   return {
     usuarioId,
-    empresaId,
-    papeis,
+    empresaId: organizationContext?.empresaId ?? null,
+    papeis: organizationContext ? papeis : [],
     papeisPlataforma: papeisPlataformaValidados,
     hasOrganizationContext: Boolean(organizationContext),
     hasPlatformContext: Boolean(platformContext),

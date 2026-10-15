@@ -13,11 +13,12 @@ export async function resolveContextoAutorizacao(
     { data: roles, error: rolesError },
     { data: plataforma, error: plataformaError },
   ] = await Promise.all([
-    supabase.from("usuarios").select("empresa_id").eq("id", userId).maybeSingle(),
+    supabase.from("usuarios").select("empresa_id, ativo").eq("id", userId).maybeSingle(),
     supabase.from("user_roles").select("role").eq("user_id", userId),
     supabase.from("plataforma_usuarios").select("papel").eq("user_id", userId),
   ]);
 
+  if (!usuario?.ativo) throw new Error("Conta desativada ou indisponível.");
   if (usuarioError) throw new Error("Não foi possível verificar o contexto do usuário.");
   if (rolesError) throw new Error("Não foi possível verificar suas permissões.");
   if (plataformaError) throw new Error("Não foi possível verificar o contexto da plataforma.");
@@ -61,7 +62,7 @@ export async function requireCapability(
   capacidade: Capacidade,
 ): Promise<ContextoResolvido> {
   const contexto = await resolveContextoAutorizacao(supabase, userId);
-  if (!podeCom(contexto.papeis, capacidade)) {
+  if (!contexto.organizationContext || !podeCom(contexto.papeis, capacidade)) {
     throw new Error("Você não tem permissão para realizar esta ação.");
   }
   return contexto;
@@ -74,11 +75,11 @@ export function requireResourceAccess(
 ): ContextoResolvido {
   const resolved = context?.contexto ?? null;
   if (!empresaId) {
-    if (resolved?.hasPlatformContext && options?.allowPlatform) return resolved;
+    if (resolved?.papeisPlataforma.includes("admin_master") && options?.allowPlatform) return resolved;
     throw new Error("Recurso sem organização vinculada.");
   }
 
-  if (resolved?.hasPlatformContext && options?.allowPlatform) {
+  if (resolved?.papeisPlataforma.includes("admin_master") && options?.allowPlatform) {
     return resolved;
   }
 

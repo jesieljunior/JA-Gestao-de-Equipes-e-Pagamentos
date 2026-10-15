@@ -1,207 +1,53 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { RefreshCw, RotateCcw } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-
 import { AppShell } from "@/components/app-shell";
-import { EmptyState, ErrorState, LoadingBloco } from "@/components/states";
+import { ErrorState, LoadingBloco } from "@/components/states";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSessao } from "@/hooks/use-sessao";
 import { dataHora, moeda } from "@/lib/dominio";
-import {
-  conferirCobrancaSuporte,
-  listarDadosSuporte,
-  reenviarPixSuporte,
-} from "@/lib/suporte.functions";
+import { localizarEmpresasSuporte, iniciarAtendimentoSuporte, encerrarAtendimentoSuporte, listarDadosSuporte } from "@/lib/suporte.functions";
 
 export const Route = createFileRoute("/_authenticated/suporte")({
-  head: () => ({
-    meta: [
-      { title: "Suporte PayCrew" },
-      {
-        name: "description",
-        content:
-          "Atendimento às agências: consultar cobranças e pagamentos de todas as contas e reprocessar Pix que falhou.",
-      },
-      { property: "og:title", content: "Suporte PayCrew" },
-      {
-        property: "og:description",
-        content: "Consulta de cobranças e reprocessamento de pagamentos.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: Suporte,
+ head: () => ({ meta: [{title:"Atendimento por empresa — PayCrew"},{name:"description",content:"Atendimentos operacionais limitados e auditados por empresa."},{property:"og:title",content:"Atendimento por empresa — PayCrew"},{property:"og:description",content:"Consulta operacional de uma empresa por atendimento."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}] }),
+ component: Suporte,
 });
-
 function Suporte() {
-  const { ehEquipePlataforma, isPending } = useSessao();
-
-  if (isPending) {
-    return (
-      <AppShell titulo="Suporte PayCrew">
-        <LoadingBloco />
-      </AppShell>
-    );
-  }
-
-  if (!ehEquipePlataforma) {
-    return (
-      <AppShell titulo="Suporte PayCrew">
-        <EmptyState
-          titulo="Área restrita"
-          descricao="Somente a equipe da PayCrew tem acesso a esta página."
-        />
-      </AppShell>
-    );
-  }
-
-  return (
-    <AppShell
-      titulo="Suporte PayCrew"
-      descricao="Cobranças e pagamentos de todas as agências"
-    >
-      <Tabs defaultValue="cobrancas">
-        <TabsList>
-          <TabsTrigger value="cobrancas">Cobranças</TabsTrigger>
-          <TabsTrigger value="pagamentos">Pagamentos</TabsTrigger>
-        </TabsList>
-        <TabsContent value="cobrancas" className="mt-4">
-          <Cobrancas />
-        </TabsContent>
-        <TabsContent value="pagamentos" className="mt-4">
-          <Pagamentos />
-        </TabsContent>
-      </Tabs>
-    </AppShell>
-  );
+ const qc=useQueryClient();
+ const localizar=useServerFn(localizarEmpresasSuporte);
+ const iniciar=useServerFn(iniciarAtendimentoSuporte);
+ const encerrar=useServerFn(encerrarAtendimentoSuporte);
+ const [busca,setBusca]=useState(""); const [motivo,setMotivo]=useState("");
+ const q=useQuery({queryKey:["suporte","empresas"],queryFn:()=>localizar()});
+ const inicio=useMutation({mutationFn:(empresaId:string)=>iniciar({data:{empresaId,motivo}}),onSuccess:()=>{setMotivo("");qc.invalidateQueries({queryKey:["suporte"]});},onError:(e:Error)=>toast.error(e.message)});
+ const fim=useMutation({mutationFn:(atendimentoId:string)=>encerrar({data:{atendimentoId}}),onSuccess:async()=>{await qc.cancelQueries({queryKey:["suporte","dados"]});qc.removeQueries({queryKey:["suporte","dados"]});qc.invalidateQueries({queryKey:["suporte","empresas"]});},onError:(e:Error)=>toast.error(e.message)});
+ const atendimento=q.data?.atendimento;
+ const empresa=q.data?.empresas.find(e=>e.id===atendimento?.empresa_id);
+ return <AppShell titulo="Suporte PayCrew" descricao={empresa ? `Atendimento: ${empresa.nome}` : "Empresas clientes"}>
+ {q.isPending ? <LoadingBloco/> : q.isError ? <ErrorState error={q.error} onRetry={()=>q.refetch()}/> : atendimento ? <>
+ <section className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4"><div><h2 className="font-semibold">{empresa?.nome}</h2><p className="text-sm text-muted-foreground">{atendimento.motivo} · {dataHora(atendimento.iniciado_em)}</p></div><Button variant="outline" disabled={fim.isPending} onClick={()=>fim.mutate(atendimento.id)}>Encerrar atendimento</Button></section>
+ <Dados key={atendimento.id} atendimentoId={atendimento.id}/></> : <>
+ <div className="mb-5 grid gap-4 sm:grid-cols-2"><div><Label htmlFor="busca">Pesquisar empresa</Label><Input id="busca" value={busca} onChange={e=>setBusca(e.target.value)}/></div><div><Label htmlFor="motivo">Finalidade do atendimento</Label><Input id="motivo" value={motivo} onChange={e=>setMotivo(e.target.value)}/></div></div>
+ <ul className="divide-y divide-border">{q.data.empresas.filter(e=>`${e.nome} ${e.cnpj}`.toLowerCase().includes(busca.toLowerCase())).map(e=><li key={e.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><p className="font-medium">{e.nome}</p><p className="text-sm text-muted-foreground">{e.cnpj} · {e.ativa?"Ativa":"Inativa"}</p></div><Button disabled={inicio.isPending || motivo.trim().length<5} onClick={()=>inicio.mutate(e.id)}>Iniciar atendimento</Button></li>)}</ul></>}
+ </AppShell>;
 }
-
-function Cobrancas() {
-  const queryClient = useQueryClient();
-  const conferirFn = useServerFn(conferirCobrancaSuporte);
-  const listarFn = useServerFn(listarDadosSuporte);
-
-  const q = useQuery({
-    queryKey: ["suporte", "cobrancas"],
-    queryFn: async () => {
-      const dados = await listarFn();
-      return dados.cobrancas;
-    },
-  });
-
-  const conferir = useMutation({
-    mutationFn: (id: string) => conferirFn({ data: { id } }),
-    onSuccess: (r) => {
-      toast.success(r.status === "pago" ? "Pagamento confirmado." : `Status: ${r.status}`);
-      queryClient.invalidateQueries({ queryKey: ["suporte"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  if (q.isPending) return <LoadingBloco />;
-  if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
-  if (q.data.length === 0)
-    return <EmptyState titulo="Sem cobranças" descricao="Nada emitido até agora." />;
-
-  return (
-    <ul className="space-y-2">
-      {q.data.map((c) => (
-        <li
-          key={c.id}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card px-4 py-3"
-        >
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium">
-              {(c.empresas as { nome: string } | null)?.nome ?? "—"} · {c.descricao}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {c.tipo === "aporte_agencia" ? "Recarga de saldo" : "Cobrança de cliente"} ·{" "}
-              {dataHora(c.criado_em)}
-            </p>
-            {c.erro ? <p className="text-xs text-destructive">{c.erro}</p> : null}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="tabular-nums text-sm font-semibold">{moeda(c.valor)}</span>
-            <StatusBadge status={c.status} />
-            {c.status !== "pago" && c.parceiro_cobranca_id ? (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={conferir.isPending}
-                onClick={() => conferir.mutate(c.id)}
-              >
-                <RefreshCw className="size-4" /> Conferir
-              </Button>
-            ) : null}
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function Pagamentos() {
-  const queryClient = useQueryClient();
-  const reenviarFn = useServerFn(reenviarPixSuporte);
-  const listarFn = useServerFn(listarDadosSuporte);
-
-  const q = useQuery({
-    queryKey: ["suporte", "pagamentos"],
-    queryFn: async () => {
-      const dados = await listarFn();
-      return dados.pagamentos;
-    },
-  });
-
-  const reenviar = useMutation({
-    mutationFn: (id: string) => reenviarFn({ data: { pagamentoId: id } }),
-    onSuccess: () => {
-      toast.success("Pix reenviado.");
-      queryClient.invalidateQueries({ queryKey: ["suporte"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  if (q.isPending) return <LoadingBloco />;
-  if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
-  if (q.data.length === 0)
-    return <EmptyState titulo="Sem pagamentos" descricao="Nenhum Pix gerado até agora." />;
-
-  return (
-    <ul className="space-y-2">
-      {q.data.map((p) => (
-        <li
-          key={p.id}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card px-4 py-3"
-        >
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{moeda(p.valor)}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {dataHora(p.criado_em)}
-              {p.txid_parceiro ? ` · ${p.txid_parceiro}` : ""}
-            </p>
-            {p.erro ? <p className="text-xs text-destructive">{p.erro}</p> : null}
-          </div>
-          <div className="flex items-center gap-2">
-            <StatusBadge status={p.status} />
-            {p.status === "falhou" ? (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={reenviar.isPending}
-                onClick={() => reenviar.mutate(p.id)}
-              >
-                <RotateCcw className="size-4" /> Reenviar Pix
-              </Button>
-            ) : null}
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
+function Dados({atendimentoId}:{atendimentoId:string}) {
+ const listar=useServerFn(listarDadosSuporte);
+ const q=useQuery({queryKey:["suporte","dados",atendimentoId],queryFn:()=>listar({data:{atendimentoId}})});
+ if(q.isPending)return <LoadingBloco/>;
+ if(q.isError)return <ErrorState error={q.error} onRetry={()=>q.refetch()}/>;
+ const d=q.data;
+ return <><dl className="mb-6 grid gap-5 sm:grid-cols-4">{[["Eventos",d.eventos.length],["Equipes",d.equipes.length],["Colaboradores",d.colaboradores.length],["Pontos pendentes",d.pontos.filter(p=>p.status==="pendente").length]].map(([label,valor])=><div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="text-2xl font-semibold">{valor}</dd></div>)}</dl>
+ <Tabs defaultValue="eventos"><TabsList className="flex h-auto flex-wrap"><TabsTrigger value="eventos">Eventos</TabsTrigger><TabsTrigger value="pessoas">Colaboradores</TabsTrigger><TabsTrigger value="pontos">Pontos</TabsTrigger><TabsTrigger value="financeiro">Diagnóstico financeiro</TabsTrigger><TabsTrigger value="ocorrencias">Ocorrências</TabsTrigger></TabsList>
+ <TabsContent value="eventos"><ul className="divide-y divide-border">{d.eventos.map(e=><li key={e.id} className="flex justify-between gap-3 py-3"><span>{e.nome} · {dataHora(e.data_inicio)}</span><StatusBadge status={e.status}/></li>)}</ul></TabsContent>
+ <TabsContent value="pessoas"><ul className="divide-y divide-border">{d.colaboradores.map(p=><li key={p.id} className="py-3">{p.nome} · {p.funcao} · {p.tipo_vinculo}</li>)}</ul></TabsContent>
+ <TabsContent value="pontos"><ul className="divide-y divide-border">{d.pontos.map(p=><li key={p.id} className="flex justify-between gap-3 py-3"><span>{p.tipo} · {dataHora(p.registrado_em)}</span><StatusBadge status={p.status}/></li>)}</ul></TabsContent>
+ <TabsContent value="financeiro"><h3 className="mt-4 font-semibold">Fechamentos</h3>{d.fechamentos.map(f=><div key={f.id} className="flex justify-between border-b border-border py-3"><span>{f.horas_trabalhadas} h · {moeda(f.valor_calculado)}</span><StatusBadge status={f.status}/></div>)}<h3 className="mt-5 font-semibold">Pagamentos</h3>{d.pagamentos.map(p=><div key={p.id} className="flex flex-wrap justify-between gap-3 border-b border-border py-3"><span>{moeda(p.valor)} · {p.erro}</span><StatusBadge status={p.status}/></div>)}<h3 className="mt-5 font-semibold">Cobranças</h3>{d.cobrancas.map(c=><div key={c.id} className="flex justify-between border-b border-border py-3"><span>{c.descricao} · {moeda(c.valor)}</span><StatusBadge status={c.status}/></div>)}</TabsContent>
+ <TabsContent value="ocorrencias">{d.ocorrencias.map(o=><p key={o.id} className="border-b border-border py-3">{o.descricao} · {dataHora(o.criado_em)}</p>)}</TabsContent>
+ </Tabs></>;
 }
