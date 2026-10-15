@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { MasterOverview } from "@/components/master-overview";
+import { alterarAtivacaoSuporte } from "@/lib/plataforma.functions";
 import { AppShell } from "@/components/app-shell";
 import { EmptyState, ErrorState, LoadingBloco } from "@/components/states";
 import { Button } from "@/components/ui/button";
@@ -78,8 +80,9 @@ function Admin() {
       titulo="Administração PayCrew"
       descricao="Agências, planos, cupons e receita da plataforma"
     >
-      <Tabs defaultValue="agencias">
-        <TabsList>
+      <Tabs defaultValue="visao">
+        <TabsList className="flex h-auto flex-wrap">
+          <TabsTrigger value="visao">Visão global</TabsTrigger>
           <TabsTrigger value="agencias">Agências</TabsTrigger>
           <TabsTrigger value="planos">Planos</TabsTrigger>
           <TabsTrigger value="cupons">Cupons</TabsTrigger>
@@ -87,6 +90,7 @@ function Admin() {
           <TabsTrigger value="equipe">Equipe</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="visao" className="mt-4"><MasterOverview /></TabsContent>
         <TabsContent value="agencias" className="mt-4">
           <Agencias />
         </TabsContent>
@@ -544,6 +548,8 @@ function TaxasPagamento() {
 
 function Equipe() {
   const queryClient = useQueryClient();
+  const ativarFn = useServerFn(alterarAtivacaoSuporte);
+  const ativar = useMutation({mutationFn: (data: {usuarioId:string;ativo:boolean}) => ativarFn({data}), onSuccess:()=>queryClient.invalidateQueries({queryKey:["admin"]}), onError:(e:Error)=>toast.error(e.message)});
   const [userId, setUserId] = useState("");
   const [papel, setPapel] = useState("suporte");
 
@@ -552,7 +558,7 @@ function Equipe() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("plataforma_usuarios")
-        .select("*, usuarios(nome, email)");
+        .select("*, usuarios(nome, email, ativo)");
       if (error) throw error;
       return data;
     },
@@ -628,6 +634,7 @@ function Equipe() {
                 {(m.usuarios as { nome?: string; email?: string } | null)?.email ?? m.user_id} ·{" "}
                 {m.papel}
               </span>
+              {m.papel === "suporte" ? <Button size="sm" variant="outline" disabled={ativar.isPending} onClick={()=>ativar.mutate({usuarioId:m.user_id,ativo:!m.usuarios?.ativo})}>{m.usuarios?.ativo ? "Desativar" : "Ativar"}</Button> : null}
               <Button size="sm" variant="ghost" onClick={() => remover.mutate(m.id)}>
                 Remover
               </Button>
