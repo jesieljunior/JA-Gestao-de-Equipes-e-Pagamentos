@@ -2084,6 +2084,41 @@ export type Database = {
           },
         ]
       }
+      suporte_atendimentos: {
+        Row: {
+          empresa_id: string
+          encerrado_em: string | null
+          id: string
+          iniciado_em: string
+          motivo: string
+          usuario_id: string
+        }
+        Insert: {
+          empresa_id: string
+          encerrado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          motivo: string
+          usuario_id: string
+        }
+        Update: {
+          empresa_id?: string
+          encerrado_em?: string | null
+          id?: string
+          iniciado_em?: string
+          motivo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suporte_atendimentos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taxas_meio_pagamento: {
         Row: {
           ativo: boolean
@@ -2339,6 +2374,10 @@ export type Database = {
         Args: { _empresa_id: string }
         Returns: boolean
       }
+      encerrar_atendimento: {
+        Args: { _atendimento_id: string }
+        Returns: undefined
+      }
       fechar_fatura_ciclo: {
         Args: { _empresa_id: string; _ref: string }
         Returns: string
@@ -2349,6 +2388,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      iniciar_atendimento: {
+        Args: { _empresa_id: string; _motivo: string }
+        Returns: string
       }
       plano_da_empresa: {
         Args: { _empresa_id: string }
