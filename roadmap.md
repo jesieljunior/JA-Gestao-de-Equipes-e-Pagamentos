@@ -18,9 +18,11 @@
 - [x] Enforce QR expiry, rate limits, ordered time-clock records, out-of-hours review, GPS display, and audited decisions
 - [ ] Repair Pix payouts to freelancers and expose actionable failure reasons
 - [ ] Audit the agile-workflow feature and close other critical end-to-end gaps
-- [ ] Separate ADMIN_MASTER, SUPORTE, and organization contexts across session, UI, server functions, and RLS
-- [ ] Require explicit, audited company selection for support and remove support payment/balance privileges
-- [ ] Execute and report the 16 required cross-role and cross-company authorization scenarios
+- [x] Separate ADMIN_MASTER, SUPORTE, and organization contexts across session, UI, server functions, and RLS
+- [x] Require explicit, audited company selection for support and remove support payment/balance privileges
+- [x] Execute and report the 16 required cross-role and cross-company authorization scenarios at database level; integrated UI validation remains blocked by pending preview modules
 - [x] Correct daily-rate propagation from event scale through closing and finance, including warnings and correction flow
 - [ ] Replace Asaas with Mercado Pago for new collections using connected agency accounts and embedded checkout
 - [ ] Preserve and reconcile historical Asaas charges, transfers, and webhooks during the gateway transition
+
+- [ ] Verify real login, support-company selection/closure and role-specific views end to end (blocked by preview module loading).
