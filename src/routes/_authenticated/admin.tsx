@@ -556,11 +556,13 @@ function Equipe() {
   const q = useQuery({
     queryKey: ["admin", "equipe"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("plataforma_usuarios")
-        .select("*, usuarios(nome, email, ativo)");
-      if (error) throw error;
-      return data;
+      const [membros, usuarios] = await Promise.all([
+        supabase.from("plataforma_usuarios").select("*"),
+        supabase.from("usuarios").select("id,nome,email,ativo"),
+      ]);
+      if (membros.error) throw membros.error;
+      if (usuarios.error) throw usuarios.error;
+      return membros.data.map((m) => ({ ...m, usuarios: usuarios.data.find((u) => u.id === m.user_id) ?? null }));
     },
   });
 
