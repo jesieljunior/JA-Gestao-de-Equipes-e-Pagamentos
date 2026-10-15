@@ -53,7 +53,7 @@ export const decidirPonto = createServerFn({ method: "POST" })
     await supabaseAdmin.from("logs_auditoria").insert({
       empresa_id: empresaId,
       ator_id: context.userId,
-      ator_contexto: "agencia",
+      ator_contexto: "organizacao",
       acao: data.status === "aprovado" ? "ponto_aprovado" : "ponto_recusado",
       recurso_tipo: "ponto",
       recurso_id: data.pontoId,
@@ -88,7 +88,7 @@ export const lancarPontoManual = createServerFn({ method: "POST" })
     await supabaseAdmin.from("logs_auditoria").insert({
       empresa_id: empresaId,
       ator_id: context.userId,
-      ator_contexto: "agencia",
+      ator_contexto: "organizacao",
       acao: "ponto_manual_criado",
       recurso_tipo: "ponto",
       recurso_id: ponto.id,
@@ -124,7 +124,7 @@ export const rotacionarQrEvento = createServerFn({ method: "POST" })
     await supabaseAdmin.from("logs_auditoria").insert({
       empresa_id: evento.empresa_id,
       ator_id: context.userId,
-      ator_contexto: "agencia",
+      ator_contexto: "organizacao",
       acao: "qr_ponto_rotacionado",
       recurso_tipo: "evento",
       recurso_id: data.eventoId,

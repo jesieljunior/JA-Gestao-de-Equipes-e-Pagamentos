@@ -45,7 +45,7 @@ export const listarDadosSuporte = createServerFn({ method: "GET" })
     if (atendimento.error || !atendimento.data) throw new Error("Atendimento não autorizado ou encerrado.");
     const empresaId = atendimento.data.empresa_id;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const audit = await supabaseAdmin.from("logs_auditoria").insert({ empresa_id: empresaId, ator_id: context.userId, ator_contexto: "plataforma", acao: "atendimento_consulta", recurso_tipo: "atendimento", recurso_id: data.atendimentoId, resultado: "sucesso", detalhes: { finalidade: atendimento.data.motivo } });
+    const audit = await supabaseAdmin.from("logs_auditoria").insert({ empresa_id: empresaId, ator_id: context.userId, ator_contexto: context.contexto.papeisPlataforma.includes("admin_master") ? "admin_master" : "suporte", acao: "atendimento_consulta", recurso_tipo: "atendimento", recurso_id: data.atendimentoId, resultado: "sucesso", detalhes: { finalidade: atendimento.data.motivo } });
     if (audit.error) throw new Error("Não foi possível auditar a consulta.");
     const [eventos, colaboradores, equipes, escalas, pontos, ocorrencias, fechamentos, pagamentos, cobrancas] = await Promise.all([
       supabaseAdmin.from("eventos").select("id,nome,status,data_inicio,data_fim,local").eq("empresa_id",empresaId),

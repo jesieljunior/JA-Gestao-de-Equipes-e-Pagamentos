@@ -84,7 +84,7 @@ export const criarAcessoEquipe = createServerFn({ method: "POST" })
     await supabaseAdmin.from("logs_auditoria").insert({
       empresa_id: ator.empresa_id,
       ator_id: context.userId,
-      ator_contexto: "agencia",
+      ator_contexto: "organizacao",
       acao: "acesso_equipe_criado",
       recurso_tipo: "usuario",
       resultado: "sucesso",
