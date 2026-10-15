@@ -13,3 +13,6 @@
 - Time-clock selfies are human-review evidence with explicit consent and configurable retention, not biometric liveness proof; this keeps the product claim aligned with implemented validation.
 - Billing V2 is derived from database-deduplicated final participations with server-side plan gates and cycle price snapshots; browser state cannot authorize paid operations or set invoices.
 - Keep SaaS invoices separate from worker funding and gateway costs; payout and collection paths must never generate legacy percentage fees.
+- Resolve platform and organization contexts exclusively; legacy company links must not grant platform accounts tenant capabilities.
+- Support reads require a caller-owned open audited attendance and explicit ownership-chain filters; support money-moving endpoints fail closed.
+- Master global summaries use authenticated RLS reads; privileged account changes verify master authority before loading the administrative client.

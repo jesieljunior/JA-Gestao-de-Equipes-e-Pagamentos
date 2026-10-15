@@ -99,6 +99,20 @@
       "when": 1792087981396,
       "tag": "0013_lock_platform_audits_and_webhook_ingestion",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792089131459,
+      "tag": "0014_enforce_active_roles_and_preserve_master_charge_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1792089232186,
+      "tag": "0015_correct_support_audit_context_values",
+      "breakpoints": true
     }
   ]
 }

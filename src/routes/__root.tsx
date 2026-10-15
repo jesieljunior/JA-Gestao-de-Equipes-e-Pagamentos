@@ -127,8 +127,9 @@ function RootComponent() {
         event !== "USER_UPDATED"
       )
         return;
+      if (event === "SIGNED_OUT") queryClient.clear();
+      else queryClient.invalidateQueries();
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);

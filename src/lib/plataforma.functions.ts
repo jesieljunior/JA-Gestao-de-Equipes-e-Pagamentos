@@ -22,7 +22,7 @@ export const alterarAtivacaoSuporte = createServerFn({method:"POST"}).middleware
  const role=await context.supabase.from("plataforma_usuarios").select("papel").eq("user_id",data.usuarioId);
  if(role.error || !role.data?.some(r=>r.papel==="suporte") || role.data.some(r=>r.papel==="admin_master"))throw new Error("A operação é exclusiva para contas de suporte.");
  const {supabaseAdmin}=await import("@/integrations/supabase/client.server");
- const audit=await supabaseAdmin.from("logs_auditoria").insert({ator_id:context.userId,ator_contexto:"admin_master",acao:data.ativo?"suporte_ativado":"suporte_desativado",recurso_tipo:"usuario",recurso_id:data.usuarioId,resultado:"autorizado",detalhes:{ativo:data.ativo}});
+ const audit=await supabaseAdmin.from("logs_auditoria").insert({ator_id:context.userId,ator_contexto:"admin_master",acao:data.ativo?"suporte_ativado":"suporte_desativado",recurso_tipo:"usuario",recurso_id:data.usuarioId,resultado:"sucesso",detalhes:{ativo:data.ativo}});
  if(audit.error)throw new Error("Não foi possível auditar a alteração.");
  const r=await supabaseAdmin.from("usuarios").update({ativo:data.ativo}).eq("id",data.usuarioId);
  if(r.error)throw new Error("Não foi possível alterar a ativação.");
