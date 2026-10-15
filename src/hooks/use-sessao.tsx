@@ -30,7 +30,7 @@ async function carregarSessao(): Promise<Sessao | null> {
     .eq("id", user.id)
     .maybeSingle();
   if (error) throw error;
-  if (!usuario) return null;
+  if (!usuario?.ativo) return null;
 
   const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
 
@@ -87,12 +87,12 @@ export function useSessao() {
     ...query,
     sessao,
     contexto,
-    empresaId: sessao?.usuario.empresa_id ?? null,
-    papeis: sessao?.papeis ?? [],
+    empresaId: contexto.empresaId,
+    papeis: contexto.papeis,
     papeisPlataforma,
     ehAdminMaster: papeisPlataforma.includes("admin_master"),
     ehSuporte: papeisPlataforma.includes("suporte"),
     ehEquipePlataforma: papeisPlataforma.length > 0,
-    pode: (c: Capacidade) => podeCom(sessao?.papeis ?? [], c),
+    pode: (c: Capacidade) => podeCom(contexto.papeis, c),
   };
 }

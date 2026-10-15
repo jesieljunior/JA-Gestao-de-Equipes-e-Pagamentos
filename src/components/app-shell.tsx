@@ -111,8 +111,8 @@ const NAV: ItemNav[] = [
 ];
 
 const NAV_PLATAFORMA: (ItemNav & { somenteMaster?: boolean })[] = [
-  { to: "/suporte", label: "Suporte PayCrew", icone: LifeBuoy },
-  { to: "/admin", label: "Admin PayCrew", icone: Shield, somenteMaster: true },
+  { to: "/suporte", label: "Suporte PayCrew", icone: LifeBuoy, mobile: true },
+  { to: "/admin", label: "Admin PayCrew", icone: Shield, somenteMaster: true, mobile: true },
   { to: "/acessos-teste", label: "Acessos de teste", icone: FlaskConical, somenteMaster: true },
 ];
 
@@ -135,7 +135,7 @@ export function AppShell({
   const temContextoPlataforma = contexto.hasPlatformContext || ehEquipePlataforma;
 
   const itens = [
-    ...NAV.filter((i) => !i.capacidade || pode(i.capacidade)),
+    ...NAV.filter((i) => contexto.hasOrganizationContext && (!i.capacidade || pode(i.capacidade))),
     ...NAV_PLATAFORMA.filter((i) => (i.somenteMaster ? ehAdminMaster : temContextoPlataforma)),
   ];
   const itensMobile = itens.filter((i) => i.mobile).slice(0, 5);
@@ -153,7 +153,7 @@ export function AppShell({
         <div className="border-b border-sidebar-border px-4 py-4">
           <p className="text-sm font-semibold tracking-tight">PayCrew</p>
           <p className="truncate text-xs text-sidebar-foreground/60">
-            {sessao?.empresa?.nome ?? "Operação e pagamento de equipes"}
+            {temContextoPlataforma ? "Plataforma PayCrew" : sessao?.empresa?.nome ?? "Operação e pagamento de equipes"}
           </p>
         </div>
         <nav className="flex-1 overflow-y-auto p-2">
