@@ -1,172 +1,67 @@
-/**
- * Ações do time de suporte da PayCrew: reprocessar um Pix que falhou e
- * reconferir uma cobrança de qualquer agência. Sempre verifica o papel de
- * plataforma antes de usar o cliente administrativo.
- */
-
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requirePlatformContext } from "@/lib/autorizacao.server";
-import { resolverEmpresaDoPagamento } from "@/lib/pagamentos.server";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function autorizar(supabase: any, userId: string) {
-  const { data } = await supabase.from("plataforma_usuarios").select("papel").eq("user_id", userId);
-  const papeis = ((data ?? []) as { papel: string }[]).map((r) => r.papel);
-  if (!papeis.includes("suporte") && !papeis.includes("admin_master"))
-    throw new Error("Acesso restrito à equipe PayCrew.");
-  return papeis;
-}
+const atendimentoSchema = z.object({ atendimentoId: z.string().uuid() });
 
-/** Lista apenas os dados operacionais necessários ao atendimento. */
-export const listarDadosSuporte = createServerFn({ method: "GET" })
+export const localizarEmpresasSuporte = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     requirePlatformContext(context);
-    await autorizar(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: cobrancas, error: cobrancasError }, { data: pagamentos, error: pagamentosError }] =
-      await Promise.all([
-        supabaseAdmin
-          .from("cobrancas")
-          .select("id, empresa_id, tipo, descricao, valor, status, parceiro_cobranca_id, erro, criado_em, empresas(nome)")
-          .order("criado_em", { ascending: false })
-          .limit(200),
-        supabaseAdmin
-          .from("pagamentos")
-          .select("id, valor, status, txid_parceiro, erro, criado_em")
-          .order("criado_em", { ascending: false })
-          .limit(200),
-      ]);
-    if (cobrancasError || pagamentosError) throw new Error("Não foi possível carregar o atendimento.");
-    return { cobrancas: cobrancas ?? [], pagamentos: pagamentos ?? [] };
+    const empresas = await supabaseAdmin.from("empresas").select("id,nome,cnpj,ativa").order("nome");
+    const atendimento = await context.supabase.from("suporte_atendimentos").select("*").eq("usuario_id", context.userId).is("encerrado_em", null).maybeSingle();
+    if (empresas.error || atendimento.error) throw new Error("Não foi possível localizar empresas.");
+    return { empresas: empresas.data ?? [], atendimento: atendimento.data };
   });
 
-/** Recoloca o pagamento na fila e tenta o Pix de novo. */
-export const reenviarPixSuporte = createServerFn({ method: "POST" })
+export const iniciarAtendimentoSuporte = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ pagamentoId: z.string().uuid() }).parse(input))
-  .handler(async ({ data, context }) => {
+  .inputValidator((input: unknown) => z.object({ empresaId: z.string().uuid(), motivo: z.string().trim().min(5).max(1000) }).parse(input))
+  .handler(async ({ context, data }) => {
     requirePlatformContext(context);
-    await autorizar(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const empresaId = await resolverEmpresaDoPagamento(supabaseAdmin, data.pagamentoId);
-    const { data: pagamento } = await supabaseAdmin
-      .from("pagamentos")
-      .select("id, fechamento_id, status")
-      .eq("id", data.pagamentoId)
-      .maybeSingle();
-    if (!pagamento) throw new Error("Pagamento não encontrado.");
-    const { data: evento } = await context.supabase
-      .from("eventos")
-      .select("id, empresa_id")
-      .eq("id", (
-        await supabaseAdmin
-          .from("equipes")
-          .select("evento_id")
-          .eq("id", (
-            await supabaseAdmin.from("escalas").select("equipe_id").eq("id", (
-              await supabaseAdmin.from("fechamentos").select("escala_id").eq("id", pagamento.fechamento_id).maybeSingle()
-            )?.data?.escala_id ?? ""
-          ).maybeSingle())?.data?.equipe_id ?? ""
-      ).maybeSingle())?.data?.evento_id ?? ""
-      )
-      .maybeSingle();
-    await supabaseAdmin
-      .from("pagamentos")
-      .update({ status: "pendente", erro: null })
-      .eq("id", data.pagamentoId);
-    const { enviarPix } = await import("./pagamentos.server");
-    const resultado = await enviarPix(supabaseAdmin, data.pagamentoId, empresaId);
-    await supabaseAdmin.from("logs_auditoria").insert({
-      empresa_id: evento?.empresa_id ?? empresaId,
-      ator_id: context.userId,
-      ator_contexto: "suporte",
-      acao: "pix_reprocessado",
-      recurso_tipo: "pagamento",
-      recurso_id: data.pagamentoId,
-      resultado: "sucesso",
-      detalhes: {},
-    });
-    return resultado;
+    const r = await context.supabase.rpc("iniciar_atendimento", { _empresa_id: data.empresaId, _motivo: data.motivo });
+    if (r.error) throw new Error(r.error.message);
+    return r.data;
   });
 
-/** Confere no Asaas se a cobrança de qualquer agência já foi paga. */
-export const conferirCobrancaSuporte = createServerFn({ method: "POST" })
+export const encerrarAtendimentoSuporte = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
-  .handler(async ({ data, context }) => {
+  .inputValidator((input: unknown) => atendimentoSchema.parse(input))
+  .handler(async ({ context, data }) => {
     requirePlatformContext(context);
-    await autorizar(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: cobranca } = await supabaseAdmin
-      .from("cobrancas")
-      .select("id, empresa_id, valor, status, parceiro_cobranca_id, descricao")
-      .eq("id", data.id)
-      .maybeSingle();
-    if (!cobranca) throw new Error("Cobrança não encontrada.");
-    if (cobranca.status === "pago") return { status: "pago" as const };
-    if (!cobranca.empresa_id) throw new Error("Cobrança sem agência vinculada.");
-    if (!cobranca.parceiro_cobranca_id) throw new Error("Cobrança sem registro no parceiro.");
-
-    const { obterCobrancaAsaas } = await import("./asaas.server");
-    const remota = await obterCobrancaAsaas(cobranca.parceiro_cobranca_id);
-    if (!["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH"].includes(remota.status))
-      return { status: remota.status };
-
-    const { data: taxaPendente } = await supabaseAdmin
-      .from("taxas_plataforma")
-      .select("id, valor")
-      .eq("cobranca_id", cobranca.id)
-      .eq("status", "pendente")
-      .maybeSingle();
-
-    const valorCredito = taxaPendente
-      ? Math.max(0, Number(cobranca.valor) - Number(taxaPendente.valor))
-      : Number(cobranca.valor);
-
-    await supabaseAdmin
-      .from("cobrancas")
-      .update({ status: "pago", pago_em: new Date().toISOString() })
-      .eq("id", cobranca.id);
-
-    await supabaseAdmin.from("movimentos_saldo").insert({
-      empresa_id: cobranca.empresa_id,
-      tipo: "credito",
-      valor: valorCredito,
-      descricao: `Cobrança paga — ${cobranca.descricao}`,
-      cobranca_id: cobranca.id,
-    });
-
-    await supabaseAdmin
-      .from("fundings")
-      .update({
-        status: "available",
-        valor_disponivel: valorCredito,
-        referencia_parceiro: cobranca.parceiro_cobranca_id,
-      })
-      .eq("cobranca_id", cobranca.id)
-      .eq("status", "pending");
-
-    await supabaseAdmin.from("logs_auditoria").insert({
-      empresa_id: cobranca.empresa_id,
-      ator_id: context.userId,
-      ator_contexto: "suporte",
-      acao: "cobranca_conferida",
-      recurso_tipo: "cobranca",
-      recurso_id: cobranca.id,
-      resultado: "sucesso",
-      detalhes: { status: "pago" },
-    });
-
-    if (taxaPendente)
-      await supabaseAdmin
-        .from("taxas_plataforma")
-        .update({ status: "cobrada" })
-        .eq("id", taxaPendente.id);
-
-    return { status: "pago" as const };
+    const r = await context.supabase.rpc("encerrar_atendimento", { _atendimento_id: data.atendimentoId });
+    if (r.error) throw new Error(r.error.message);
+    return { encerrado: true };
   });
+
+export const listarDadosSuporte = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => atendimentoSchema.parse(input))
+  .handler(async ({ context, data }) => {
+    requirePlatformContext(context);
+    const atendimento = await context.supabase.from("suporte_atendimentos").select("*").eq("id",data.atendimentoId).eq("usuario_id",context.userId).is("encerrado_em",null).maybeSingle();
+    if (atendimento.error || !atendimento.data) throw new Error("Atendimento não autorizado ou encerrado.");
+    const empresaId = atendimento.data.empresa_id;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const audit = await supabaseAdmin.from("logs_auditoria").insert({ empresa_id: empresaId, ator_id: context.userId, ator_contexto: "plataforma", acao: "atendimento_consulta", recurso_tipo: "atendimento", recurso_id: data.atendimentoId, resultado: "sucesso", detalhes: { finalidade: atendimento.data.motivo } });
+    if (audit.error) throw new Error("Não foi possível auditar a consulta.");
+    const [eventos, colaboradores, equipes, escalas, pontos, ocorrencias, fechamentos, pagamentos, cobrancas] = await Promise.all([
+      supabaseAdmin.from("eventos").select("id,nome,status,data_inicio,data_fim,local").eq("empresa_id",empresaId),
+      supabaseAdmin.from("freelancers").select("id,nome,funcao,ativo,tipo_vinculo").eq("empresa_id",empresaId),
+      supabaseAdmin.from("equipes").select("id,nome,eventos!inner(empresa_id)").eq("eventos.empresa_id",empresaId),
+      supabaseAdmin.from("escalas").select("id,status,valor_combinado,equipes!inner(eventos!inner(empresa_id))").eq("equipes.eventos.empresa_id",empresaId),
+      supabaseAdmin.from("pontos").select("id,tipo,status,registrado_em,fora_horario,escalas!inner(equipes!inner(eventos!inner(empresa_id)))").eq("escalas.equipes.eventos.empresa_id",empresaId),
+      supabaseAdmin.from("ocorrencias").select("id,descricao,criado_em,escalas!inner(equipes!inner(eventos!inner(empresa_id)))").eq("escalas.equipes.eventos.empresa_id",empresaId),
+      supabaseAdmin.from("fechamentos").select("id,status,horas_trabalhadas,valor_calculado,escalas!inner(equipes!inner(eventos!inner(empresa_id)))").eq("escalas.equipes.eventos.empresa_id",empresaId),
+      supabaseAdmin.from("pagamentos").select("id,valor,status,erro,criado_em,fechamentos!inner(escalas!inner(equipes!inner(eventos!inner(empresa_id))))").eq("fechamentos.escalas.equipes.eventos.empresa_id",empresaId),
+      supabaseAdmin.from("cobrancas").select("id,descricao,valor,status,erro,criado_em").eq("empresa_id",empresaId),
+    ]);
+    for (const r of [eventos,colaboradores,equipes,escalas,pontos,ocorrencias,fechamentos,pagamentos,cobrancas]) if (r.error) throw new Error("Falha na consulta do atendimento.");
+    return { empresaId, eventos:eventos.data ?? [], colaboradores:colaboradores.data ?? [], equipes:equipes.data ?? [], escalas:escalas.data ?? [], pontos:pontos.data ?? [], ocorrencias:ocorrencias.data ?? [], fechamentos:fechamentos.data ?? [], pagamentos:pagamentos.data ?? [], cobrancas:cobrancas.data ?? [] };
+  });
+
+// Retired money-moving support endpoints fail closed, including direct requests.
+export const reenviarPixSuporte = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(() => { throw new Error("Suporte não tem autorização para executar Pix."); });
+export const conferirCobrancaSuporte = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(() => { throw new Error("Suporte não tem autorização para alterar cobranças ou saldos."); });
