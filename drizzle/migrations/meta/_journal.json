@@ -113,6 +113,13 @@
       "when": 1792089232186,
       "tag": "0015_correct_support_audit_context_values",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792089539021,
+      "tag": "0016_short_circuit_financial_rls_before_plan_checks",
+      "breakpoints": true
     }
   ]
 }

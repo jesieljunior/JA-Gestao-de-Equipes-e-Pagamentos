@@ -50,6 +50,8 @@ const formatarDocumento = (valor: string, tipo: TipoPessoa) => {
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Clientes — PayCrew" },
       {
         name: "description",

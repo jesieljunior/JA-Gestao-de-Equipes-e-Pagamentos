@@ -41,6 +41,8 @@ import {
 export const Route = createFileRoute("/_authenticated/operacao/$eventoId")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Ponto da equipe — PayCrew" },
       {
         name: "description",
