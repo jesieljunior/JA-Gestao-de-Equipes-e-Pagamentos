@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,24 @@ function Auth() {
   const [codigoOtp, setCodigoOtp] = useState("");
   const [verificandoOtp, setVerificandoOtp] = useState(false);
 
+  // Escuta se o usuário clicou no botão "Log In" do e-mail em qualquer aba/dispositivo
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+        toast.success("Autenticado com sucesso!");
+        navigate({ to: "/painel", replace: true });
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: sess }) => {
+      if (sess.session?.user) {
+        navigate({ to: "/painel", replace: true });
+      }
+    });
+
+    return () => authListener.subscription.unsubscribe();
+  }, [navigate]);
+
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
     setCarregando(true);
@@ -71,30 +89,72 @@ function Auth() {
     setCarregando(true);
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: `${window.location.origin}/auth` },
     });
     setCarregando(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success("Código de 6 dígitos enviado para seu e-mail!");
+    toast.success("E-mail de acesso enviado! Verifique sua caixa de entrada.");
     setAguardandoConfirmacao(true);
   }
 
   async function validarCodigoOtp(e: React.FormEvent) {
     e.preventDefault();
     setVerificandoOtp(true);
+    const inputLimpo = codigoOtp.trim();
+
+    // Caso o usuário cole o link completo do botão do e-mail
+    if (inputLimpo.includes("token=") || inputLimpo.includes("#access_token=")) {
+      try {
+        if (inputLimpo.includes("#access_token=")) {
+          const hash = inputLimpo.split("#")[1];
+          const params = new URLSearchParams(hash);
+          const accessToken = params.get("access_token");
+          const refreshToken = params.get("refresh_token");
+          if (accessToken && refreshToken) {
+            const { error: sessErr } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (sessErr) throw sessErr;
+            toast.success("Autenticado com sucesso!");
+            navigate({ to: "/painel", replace: true });
+            return;
+          }
+        } else if (inputLimpo.includes("token=")) {
+          const urlObj = new URL(inputLimpo);
+          const tokenParam = urlObj.searchParams.get("token");
+          const typeParam = (urlObj.searchParams.get("type") as "email" | "magiclink") ?? "email";
+          if (tokenParam) {
+            const { error: otpErr } = await supabase.auth.verifyOtp({
+              email,
+              token: tokenParam,
+              type: typeParam === "magiclink" ? "magiclink" : "email",
+            });
+            if (otpErr) throw otpErr;
+            toast.success("Autenticado com sucesso!");
+            navigate({ to: "/painel", replace: true });
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Falha ao analisar link colado:", err);
+      }
+    }
+
+    // Verificação normal de código numérico de 6 dígitos
     const { error } = await supabase.auth.verifyOtp({
       email,
-      token: codigoOtp.trim(),
+      token: inputLimpo,
       type: "email",
     });
     setVerificandoOtp(false);
     if (error) {
       toast.error(
         error.message.includes("Token has expired") || error.message.includes("invalid")
-          ? "Código de verificação inválido ou expirado."
+          ? "Código inválido ou expirado. Você também pode clicar diretamente no botão 'Log In' do e-mail."
           : error.message,
       );
       return;
@@ -110,7 +170,7 @@ function Auth() {
       email,
       password: senha,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/auth`,
         data: { nome },
       },
     });
@@ -118,7 +178,7 @@ function Auth() {
     if (error) {
       toast.error(
         error.message.includes("already registered")
-          ? "Este e-mail já tem conta. Use a aba Entrar."
+          ? "Este e-mail já tem conta. Use a aba Senha ou Código."
           : error.message,
       );
       return;
@@ -161,26 +221,41 @@ function Auth() {
           {aguardandoConfirmacao ? (
             <div className="space-y-4 text-center">
               <div>
-                <p className="text-base font-semibold">Código de Confirmação</p>
+                <p className="text-base font-semibold">E-mail de Acesso Enviado</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Enviamos um link e um código de 6 dígitos para{" "}
-                  <strong className="text-foreground">{email}</strong>.
+                  Enviamos o acesso para <strong className="text-foreground">{email}</strong>.
                 </p>
+              </div>
+
+              <div className="rounded-lg bg-primary/10 border border-primary/20 p-3 text-left space-y-2">
+                <p className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                  <span className="inline-block h-2 w-2 rounded-full bg-primary animate-pulse" />
+                  Como acessar agora:
+                </p>
+                <ol className="text-[11px] text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>
+                    <strong>Opção 1 (Recomendada):</strong> Abra o e-mail e clique no botão{" "}
+                    <strong>&quot;Log In&quot;</strong>. Esta tela detectará na hora e abrirá o
+                    painel.
+                  </li>
+                  <li>
+                    <strong>Opção 2:</strong> Se o e-mail contiver um código numérico de 6 dígitos
+                    ou se preferir copiar o endereço do link do botão, insira abaixo:
+                  </li>
+                </ol>
               </div>
 
               <form onSubmit={validarCodigoOtp} className="space-y-3 text-left">
                 <div className="space-y-1.5">
-                  <Label htmlFor="codigo-otp">Digite o código de 6 dígitos</Label>
+                  <Label htmlFor="codigo-otp">Código de 6 dígitos ou link do botão</Label>
                   <Input
                     id="codigo-otp"
                     type="text"
-                    inputMode="numeric"
-                    placeholder="123456"
+                    placeholder="Ex: 123456 ou cole o link do e-mail"
                     required
-                    maxLength={10}
                     value={codigoOtp}
                     onChange={(e) => setCodigoOtp(e.target.value)}
-                    className="text-center text-lg tracking-widest font-mono"
+                    className="text-sm font-mono"
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={verificandoOtp}>
@@ -195,7 +270,7 @@ function Auth() {
                   disabled={carregando}
                   className="text-primary hover:underline"
                 >
-                  Reenviar código
+                  Reenviar e-mail
                 </button>
                 <button
                   type="button"

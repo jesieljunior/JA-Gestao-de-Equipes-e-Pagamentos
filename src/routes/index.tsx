@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   CalendarDays,
@@ -9,6 +9,7 @@ import {
   Users2,
   Wallet,
 } from "lucide-react";
+import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +70,24 @@ const BLOCOS = [
 ];
 
 function Landing() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        navigate({ to: "/painel", replace: true });
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+        navigate({ to: "/painel", replace: true });
+      }
+    });
+
+    return () => authListener.subscription.unsubscribe();
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-background flex flex-col justify-between">
       <div>
