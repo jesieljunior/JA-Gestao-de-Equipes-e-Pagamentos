@@ -12,6 +12,14 @@ const salvarCredenciaisSchema = z.object({
   ambiente: z.enum(["sandbox", "producao"]).default("sandbox"),
 });
 
+export function mascararToken(token?: string | null): string {
+  if (!token) return "";
+  if (token.length < 12) return "••••••••";
+  const inicio = token.slice(0, 8);
+  const fim = token.slice(-4);
+  return `${inicio}...${fim}`;
+}
+
 export const obterConfiguracaoMercadoPago = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

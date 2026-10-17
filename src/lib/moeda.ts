@@ -34,3 +34,18 @@ export function parseValorPositivo(valor: string | number): number {
   if (numero < 0.01) throw new Error("Informe um valor maior ou igual a R$ 0,01.");
   return numero;
 }
+
+export function reaisParaCentavos(reais: number): number {
+  return Math.round(reais * 100);
+}
+
+export function centavosParaReais(centavos: number): number {
+  return Math.round(centavos) / 100;
+}
+
+export function formatarBRL(valor: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(valor);
+}

@@ -8,6 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  carregarDadosAcesso,
+  extrairTokenOuLink,
+  resolverDestinoAcesso,
+} from "@/lib/auth-navigation";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -15,25 +20,11 @@ export const Route = createFileRoute("/auth")({
     try {
       const { data } = await supabase.auth.getUser();
       if (data?.user) {
-        const { data: usuario } = await supabase
-          .from("usuarios")
-          .select("empresa_id, ativo")
-          .eq("id", data.user.id)
-          .maybeSingle();
-
-        if (usuario && usuario.ativo === false) return;
-
-        const { data: plataforma } = await supabase
-          .from("plataforma_usuarios")
-          .select("papel")
-          .eq("user_id", data.user.id);
-
-        const papeis = (plataforma ?? []).map((p) => p.papel as string);
-        if (papeis.includes("admin_master")) throw redirect({ to: "/admin" });
-        if (papeis.includes("suporte")) throw redirect({ to: "/suporte" });
-
-        if (!usuario?.empresa_id) throw redirect({ to: "/onboarding" });
-        throw redirect({ to: "/painel" });
+        const dados = await carregarDadosAcesso(supabase, data.user.id);
+        const destino = resolverDestinoAcesso(dados);
+        if (destino !== "/auth") {
+          throw redirect({ to: destino });
+        }
       }
     } catch (e) {
       if (e && typeof e === "object" && "to" in e) throw e;
@@ -72,52 +63,76 @@ function Auth() {
 
   const redirecionarParaDestino = useCallback(
     async (user: { id: string }) => {
-      const { data: usuario } = await supabase
-        .from("usuarios")
-        .select("empresa_id, ativo")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (usuario && usuario.ativo === false) {
-        toast.error("Conta desativada ou indisponível.");
-        await supabase.auth.signOut();
-        return;
+      try {
+        const dados = await carregarDadosAcesso(supabase, user.id);
+        if (!dados.ativo) {
+          toast.error("Conta desativada ou indisponível.");
+          await supabase.auth.signOut();
+          return;
+        }
+        const destino = resolverDestinoAcesso(dados);
+        if (window.location.hash || window.location.search) {
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+        try {
+          await (navigate as unknown as (opts: { to: string; replace?: boolean }) => Promise<void>)(
+            { to: destino, replace: true },
+          );
+        } catch {
+          window.location.href = destino;
+        }
+      } catch (err) {
+        console.error("Falha ao resolver destino de acesso:", err);
+        window.location.href = "/painel";
       }
-
-      const { data: plataforma } = await supabase
-        .from("plataforma_usuarios")
-        .select("papel")
-        .eq("user_id", user.id);
-
-      const papeis = (plataforma ?? []).map((p) => p.papel as string);
-      if (papeis.includes("admin_master")) {
-        navigate({ to: "/admin", replace: true });
-        return;
-      }
-      if (papeis.includes("suporte")) {
-        navigate({ to: "/suporte", replace: true });
-        return;
-      }
-
-      if (!usuario?.empresa_id) {
-        navigate({ to: "/onboarding", replace: true });
-        return;
-      }
-
-      navigate({ to: "/painel", replace: true });
     },
     [navigate],
   );
 
-  // Escuta confirmação da autenticação
+  // Escuta confirmação da autenticação e trata links de confirmação com hash ou code
   useEffect(() => {
+    // 1. Trata código PKCE na query string (?code=...)
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ data, error }) => {
+        if (!error && data?.user) {
+          toast.success("Autenticado com sucesso!");
+          redirecionarParaDestino(data.user);
+        }
+      });
+    }
+
+    // 2. Trata hash com tokens (#access_token=...&refresh_token=...)
+    if (window.location.hash.includes("access_token=")) {
+      const hash = window.location.hash.replace(/^#/, "");
+      const hashParams = new URLSearchParams(hash);
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      if (accessToken && refreshToken) {
+        supabase.auth
+          .setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          .then(({ data, error }) => {
+            if (!error && data?.user) {
+              toast.success("Autenticado com sucesso!");
+              redirecionarParaDestino(data.user);
+            }
+          });
+      }
+    }
+
+    // 3. Listener de estado de autenticação Supabase
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user && event === "SIGNED_IN") {
+      if (session?.user && (event === "SIGNED_IN" || event === "USER_UPDATED")) {
         toast.success("Autenticado com sucesso!");
         await redirecionarParaDestino(session.user);
       }
     });
 
+    // 4. Verificação de sessão já ativa no carregamento
     supabase.auth.getSession().then(async ({ data: sess }) => {
       if (sess.session?.user) {
         await redirecionarParaDestino(sess.session.user);
@@ -165,58 +180,30 @@ function Auth() {
   async function validarCodigoOtp(e: React.FormEvent) {
     e.preventDefault();
     setVerificandoOtp(true);
-    const inputLimpo = codigoOtp.trim();
+    const extracao = extrairTokenOuLink(codigoOtp);
 
-    // Caso o usuário cole o link completo do botão do e-mail
-    if (inputLimpo.includes("token=") || inputLimpo.includes("#access_token=")) {
+    // Caso o usuário cole link com tokens de hash
+    if (extracao.tipo === "tokens_hash" && extracao.accessToken && extracao.refreshToken) {
       try {
-        if (inputLimpo.includes("#access_token=")) {
-          const hash = inputLimpo.split("#")[1];
-          const params = new URLSearchParams(hash);
-          const accessToken = params.get("access_token");
-          const refreshToken = params.get("refresh_token");
-          if (accessToken && refreshToken) {
-            const { error: sessErr } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            if (sessErr) throw sessErr;
-            toast.success("Autenticado com sucesso!");
-            const { data: userData } = await supabase.auth.getUser();
-            if (userData.user) {
-              await redirecionarParaDestino(userData.user);
-            }
-            return;
-          }
-        } else if (inputLimpo.includes("token=")) {
-          const urlObj = new URL(inputLimpo);
-          const tokenParam = urlObj.searchParams.get("token");
-          const typeParam = (urlObj.searchParams.get("type") as "email" | "magiclink") ?? "email";
-          if (tokenParam) {
-            const { error: otpErr } = await supabase.auth.verifyOtp({
-              email,
-              token: tokenParam,
-              type: typeParam === "magiclink" ? "magiclink" : "email",
-            });
-            if (otpErr) throw otpErr;
-            toast.success("Autenticado com sucesso!");
-            const { data: userData } = await supabase.auth.getUser();
-            if (userData.user) {
-              await redirecionarParaDestino(userData.user);
-            }
-            return;
-          }
-        }
+        const { error: sessErr } = await supabase.auth.setSession({
+          access_token: extracao.accessToken,
+          refresh_token: extracao.refreshToken,
+        });
+        if (sessErr) throw sessErr;
+        toast.success("Autenticado com sucesso!");
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user) await redirecionarParaDestino(userData.user);
+        return;
       } catch (err) {
-        console.error("Falha ao analisar link colado:", err);
+        console.error("Falha ao aplicar tokens:", err);
       }
     }
 
-    // Verificação normal de código numérico de 6 dígitos
+    // Validação de token ou código OTP
     const { data: otpData, error } = await supabase.auth.verifyOtp({
       email,
-      token: inputLimpo,
-      type: "email",
+      token: extracao.token || codigoOtp.trim(),
+      type: extracao.tokenType || "email",
     });
     setVerificandoOtp(false);
     if (error) {
@@ -232,9 +219,7 @@ function Auth() {
       await redirecionarParaDestino(otpData.user);
     } else {
       const { data: userData } = await supabase.auth.getUser();
-      if (userData.user) {
-        await redirecionarParaDestino(userData.user);
-      }
+      if (userData.user) await redirecionarParaDestino(userData.user);
     }
   }
 
