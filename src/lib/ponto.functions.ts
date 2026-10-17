@@ -1,7 +1,4 @@
-import { createHash } from "node:crypto";
-
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/start-server-core";
 import { z } from "zod";
 
 const tokenSchema = z.object({ token: z.string().min(8).max(128) });
@@ -21,18 +18,17 @@ const registrarSchema = identificarSchema.extend({
 
 const SEQUENCIA = ["entrada", "inicio_intervalo", "fim_intervalo", "saida"] as const;
 
-const hash = (valor: string) => createHash("sha256").update(valor).digest("hex");
+async function limitarTentativas(token: string, cpf: string | null, acao: string) {
+  const { createHash } = await import("node:crypto");
+  const { getRequestHeader } = await import("@tanstack/start-server-core");
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-function enderecoDaRequisicao() {
-  return (
+  const hash = (valor: string) => createHash("sha256").update(valor).digest("hex");
+  const enderecoDaRequisicao = () =>
     getRequestHeader("cf-connecting-ip") ??
     getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "indisponivel"
-  );
-}
+    "indisponivel";
 
-async function limitarTentativas(token: string, cpf: string | null, acao: string) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const desde = new Date(Date.now() - 10 * 60_000).toISOString();
   const tokenHash = hash(token);
   const cpfHash = cpf ? hash(cpf) : null;
