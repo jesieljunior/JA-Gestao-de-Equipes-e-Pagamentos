@@ -1,5 +1,5 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,27 @@ export const Route = createFileRoute("/auth")({
   beforeLoad: async () => {
     try {
       const { data } = await supabase.auth.getUser();
-      if (data?.user) throw redirect({ to: "/painel" });
+      if (data?.user) {
+        const { data: usuario } = await supabase
+          .from("usuarios")
+          .select("empresa_id, ativo")
+          .eq("id", data.user.id)
+          .maybeSingle();
+
+        if (usuario && usuario.ativo === false) return;
+
+        const { data: plataforma } = await supabase
+          .from("plataforma_usuarios")
+          .select("papel")
+          .eq("user_id", data.user.id);
+
+        const papeis = (plataforma ?? []).map((p) => p.papel as string);
+        if (papeis.includes("admin_master")) throw redirect({ to: "/admin" });
+        if (papeis.includes("suporte")) throw redirect({ to: "/suporte" });
+
+        if (!usuario?.empresa_id) throw redirect({ to: "/onboarding" });
+        throw redirect({ to: "/painel" });
+      }
     } catch (e) {
       if (e && typeof e === "object" && "to" in e) throw e;
     }
@@ -50,28 +70,67 @@ function Auth() {
   const [codigoOtp, setCodigoOtp] = useState("");
   const [verificandoOtp, setVerificandoOtp] = useState(false);
 
-  // Escuta se o usuário clicou no botão "Log In" do e-mail em qualquer aba/dispositivo
+  const redirecionarParaDestino = useCallback(
+    async (user: { id: string }) => {
+      const { data: usuario } = await supabase
+        .from("usuarios")
+        .select("empresa_id, ativo")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (usuario && usuario.ativo === false) {
+        toast.error("Conta desativada ou indisponível.");
+        await supabase.auth.signOut();
+        return;
+      }
+
+      const { data: plataforma } = await supabase
+        .from("plataforma_usuarios")
+        .select("papel")
+        .eq("user_id", user.id);
+
+      const papeis = (plataforma ?? []).map((p) => p.papel as string);
+      if (papeis.includes("admin_master")) {
+        navigate({ to: "/admin", replace: true });
+        return;
+      }
+      if (papeis.includes("suporte")) {
+        navigate({ to: "/suporte", replace: true });
+        return;
+      }
+
+      if (!usuario?.empresa_id) {
+        navigate({ to: "/onboarding", replace: true });
+        return;
+      }
+
+      navigate({ to: "/painel", replace: true });
+    },
+    [navigate],
+  );
+
+  // Escuta confirmação da autenticação
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user && event === "SIGNED_IN") {
         toast.success("Autenticado com sucesso!");
-        navigate({ to: "/painel", replace: true });
+        await redirecionarParaDestino(session.user);
       }
     });
 
-    supabase.auth.getSession().then(({ data: sess }) => {
+    supabase.auth.getSession().then(async ({ data: sess }) => {
       if (sess.session?.user) {
-        navigate({ to: "/painel", replace: true });
+        await redirecionarParaDestino(sess.session.user);
       }
     });
 
     return () => authListener.subscription.unsubscribe();
-  }, [navigate]);
+  }, [redirecionarParaDestino]);
 
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
     setCarregando(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha });
     setCarregando(false);
     if (error) {
       toast.error(
@@ -81,7 +140,10 @@ function Auth() {
       );
       return;
     }
-    navigate({ to: "/painel", replace: true });
+    if (data.user) {
+      toast.success("Autenticado com sucesso!");
+      await redirecionarParaDestino(data.user);
+    }
   }
 
   async function enviarLinkMagico(e: React.FormEvent) {
@@ -120,7 +182,10 @@ function Auth() {
             });
             if (sessErr) throw sessErr;
             toast.success("Autenticado com sucesso!");
-            navigate({ to: "/painel", replace: true });
+            const { data: userData } = await supabase.auth.getUser();
+            if (userData.user) {
+              await redirecionarParaDestino(userData.user);
+            }
             return;
           }
         } else if (inputLimpo.includes("token=")) {
@@ -135,7 +200,10 @@ function Auth() {
             });
             if (otpErr) throw otpErr;
             toast.success("Autenticado com sucesso!");
-            navigate({ to: "/painel", replace: true });
+            const { data: userData } = await supabase.auth.getUser();
+            if (userData.user) {
+              await redirecionarParaDestino(userData.user);
+            }
             return;
           }
         }
@@ -145,7 +213,7 @@ function Auth() {
     }
 
     // Verificação normal de código numérico de 6 dígitos
-    const { error } = await supabase.auth.verifyOtp({
+    const { data: otpData, error } = await supabase.auth.verifyOtp({
       email,
       token: inputLimpo,
       type: "email",
@@ -160,7 +228,14 @@ function Auth() {
       return;
     }
     toast.success("Autenticado com sucesso!");
-    navigate({ to: "/painel", replace: true });
+    if (otpData.user) {
+      await redirecionarParaDestino(otpData.user);
+    } else {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        await redirecionarParaDestino(userData.user);
+      }
+    }
   }
 
   async function cadastrar(e: React.FormEvent) {
@@ -184,7 +259,8 @@ function Auth() {
       return;
     }
     if (data.session) {
-      navigate({ to: "/painel", replace: true });
+      toast.success("Autenticado com sucesso!");
+      await redirecionarParaDestino(data.session.user);
       return;
     }
     setAguardandoConfirmacao(true);
@@ -201,7 +277,11 @@ function Auth() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/painel", replace: true });
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      toast.success("Autenticado com sucesso!");
+      await redirecionarParaDestino(userData.user);
+    }
   }
 
   return (

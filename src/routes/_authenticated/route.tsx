@@ -10,11 +10,35 @@ export const Route = createFileRoute("/_authenticated")({
       const { data, error } = await supabase.auth.getUser();
       if (error || !data.user) throw redirect({ to: "/auth" });
 
-      const { data: usuario } = await supabase
+      let { data: usuario } = await supabase
         .from("usuarios")
         .select("empresa_id, ativo")
         .eq("id", data.user.id)
         .maybeSingle();
+
+      if (!usuario) {
+        try {
+          const nomeMeta =
+            data.user.user_metadata?.nome ||
+            data.user.user_metadata?.full_name ||
+            data.user.email?.split("@")[0] ||
+            "Usuário";
+          await supabase.from("usuarios").upsert({
+            id: data.user.id,
+            nome: nomeMeta,
+            email: data.user.email ?? "",
+            ativo: true,
+          });
+          const { data: usuarioCriado } = await supabase
+            .from("usuarios")
+            .select("empresa_id, ativo")
+            .eq("id", data.user.id)
+            .maybeSingle();
+          if (usuarioCriado) usuario = usuarioCriado;
+        } catch {
+          // Segue para onboarding com usuário novo
+        }
+      }
 
       const { data: roles } = await supabase
         .from("user_roles")
@@ -33,7 +57,12 @@ export const Route = createFileRoute("/_authenticated")({
         papeisPlataforma: (papeisPlataforma ?? []).map((r) => r.papel as string),
       });
 
-      if (!usuario?.ativo) throw redirect({ to: "/auth" });
+      // Desvia para /auth apenas se a conta foi explicitamente desativada
+      if (usuario && usuario.ativo === false) {
+        await supabase.auth.signOut();
+        throw redirect({ to: "/auth" });
+      }
+
       if (contexto.hasPlatformContext) {
         const master = contexto.papeisPlataforma.includes("admin_master");
         const permitida =
@@ -44,12 +73,15 @@ export const Route = createFileRoute("/_authenticated")({
         if (!permitida) throw redirect({ to: master ? "/admin" : "/suporte" });
         return { user: data.user, contexto };
       }
+
       if (
         location.pathname.startsWith("/admin") ||
         location.pathname.startsWith("/suporte") ||
         location.pathname.startsWith("/acessos-teste")
-      )
+      ) {
         throw redirect({ to: "/painel" });
+      }
+
       const semEmpresa = !contexto.organizationContext;
       const naOnboarding = location.pathname.startsWith("/onboarding");
       if (semEmpresa && !naOnboarding) throw redirect({ to: "/onboarding" });

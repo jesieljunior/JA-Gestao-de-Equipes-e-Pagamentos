@@ -40,6 +40,21 @@ function Onboarding() {
   async function criar(e: React.FormEvent) {
     e.preventDefault();
     setSalvando(true);
+
+    try {
+      const { data: authUser } = await supabase.auth.getUser();
+      if (authUser.user) {
+        await supabase.from("usuarios").upsert({
+          id: authUser.user.id,
+          nome: authUser.user.user_metadata?.nome || nome.trim() || "Administrador",
+          email: authUser.user.email ?? "",
+          ativo: true,
+        });
+      }
+    } catch {
+      // segue para RPC
+    }
+
     const { error } = await supabase.rpc("criar_empresa", {
       _nome: nome.trim(),
       _cnpj: soDigitos(cnpj),
