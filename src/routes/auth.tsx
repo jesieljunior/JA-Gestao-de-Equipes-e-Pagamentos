@@ -47,6 +47,9 @@ function Auth() {
   const [nome, setNome] = useState("");
   const [aguardandoConfirmacao, setAguardandoConfirmacao] = useState(false);
 
+  const [codigoOtp, setCodigoOtp] = useState("");
+  const [verificandoOtp, setVerificandoOtp] = useState(false);
+
   async function entrar(e: React.FormEvent) {
     e.preventDefault();
     setCarregando(true);
@@ -60,6 +63,43 @@ function Auth() {
       );
       return;
     }
+    navigate({ to: "/painel", replace: true });
+  }
+
+  async function enviarLinkMagico(e: React.FormEvent) {
+    e.preventDefault();
+    setCarregando(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    setCarregando(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Código de 6 dígitos enviado para seu e-mail!");
+    setAguardandoConfirmacao(true);
+  }
+
+  async function validarCodigoOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setVerificandoOtp(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: codigoOtp.trim(),
+      type: "email",
+    });
+    setVerificandoOtp(false);
+    if (error) {
+      toast.error(
+        error.message.includes("Token has expired") || error.message.includes("invalid")
+          ? "Código de verificação inválido ou expirado."
+          : error.message,
+      );
+      return;
+    }
+    toast.success("Autenticado com sucesso!");
     navigate({ to: "/painel", replace: true });
   }
 
@@ -117,26 +157,67 @@ function Auth() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-4">
           {aguardandoConfirmacao ? (
-            <div className="space-y-3 text-center">
-              <p className="text-sm font-medium">Confirme seu e-mail</p>
-              <p className="text-sm text-muted-foreground">
-                Enviamos um link de confirmação para <strong>{email}</strong>. Clique nele para
-                ativar o acesso.
-              </p>
-              <Button variant="outline" size="sm" onClick={() => setAguardandoConfirmacao(false)}>
-                Voltar
-              </Button>
+            <div className="space-y-4 text-center">
+              <div>
+                <p className="text-base font-semibold">Código de Confirmação</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Enviamos um link e um código de 6 dígitos para{" "}
+                  <strong className="text-foreground">{email}</strong>.
+                </p>
+              </div>
+
+              <form onSubmit={validarCodigoOtp} className="space-y-3 text-left">
+                <div className="space-y-1.5">
+                  <Label htmlFor="codigo-otp">Digite o código de 6 dígitos</Label>
+                  <Input
+                    id="codigo-otp"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="123456"
+                    required
+                    maxLength={10}
+                    value={codigoOtp}
+                    onChange={(e) => setCodigoOtp(e.target.value)}
+                    className="text-center text-lg tracking-widest font-mono"
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={verificandoOtp}>
+                  {verificandoOtp ? "Verificando..." : "Confirmar e Entrar"}
+                </Button>
+              </form>
+
+              <div className="pt-2 border-t border-border flex items-center justify-between text-xs">
+                <button
+                  type="button"
+                  onClick={enviarLinkMagico}
+                  disabled={carregando}
+                  className="text-primary hover:underline"
+                >
+                  Reenviar código
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAguardandoConfirmacao(false);
+                    setCodigoOtp("");
+                  }}
+                  className="text-muted-foreground hover:underline"
+                >
+                  Trocar e-mail / Voltar
+                </button>
+              </div>
             </div>
           ) : (
             <Tabs defaultValue="entrar">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="entrar">Entrar</TabsTrigger>
-                <TabsTrigger value="criar">Criar conta</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 text-xs">
+                <TabsTrigger value="entrar">Senha</TabsTrigger>
+                <TabsTrigger value="codigo">Código</TabsTrigger>
+                <TabsTrigger value="criar">Criar</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="entrar">
+              <TabsContent value="entrar" className="mt-4">
                 <form onSubmit={entrar} className="space-y-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="email">E-mail</Label>
@@ -145,6 +226,7 @@ function Auth() {
                       type="email"
                       required
                       autoComplete="email"
+                      placeholder="seu.email@exemplo.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -161,18 +243,43 @@ function Auth() {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={carregando}>
-                    Entrar
+                    {carregando ? "Entrando..." : "Entrar"}
                   </Button>
                 </form>
               </TabsContent>
 
-              <TabsContent value="criar">
+              <TabsContent value="codigo" className="mt-4">
+                <form onSubmit={enviarLinkMagico} className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email-otp">E-mail para receber código</Label>
+                    <Input
+                      id="email-otp"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      placeholder="seu.email@exemplo.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Sem necessidade de senha. Enviamos um código ou link de 1 clique direto para
+                      sua caixa de entrada.
+                    </p>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={carregando}>
+                    {carregando ? "Enviando..." : "Enviar código de acesso"}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="criar" className="mt-4">
                 <form onSubmit={cadastrar} className="space-y-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="nome">Seu nome</Label>
                     <Input
                       id="nome"
                       required
+                      placeholder="Ex: João da Silva"
                       value={nome}
                       onChange={(e) => setNome(e.target.value)}
                     />
@@ -184,12 +291,13 @@ function Auth() {
                       type="email"
                       required
                       autoComplete="email"
+                      placeholder="seu.email@exemplo.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="senha-nova">Senha</Label>
+                    <Label htmlFor="senha-nova">Senha (mín. 6 caracteres)</Label>
                     <Input
                       id="senha-nova"
                       type="password"
@@ -201,7 +309,7 @@ function Auth() {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={carregando}>
-                    Criar conta
+                    {carregando ? "Cadastrando..." : "Criar conta de agência"}
                   </Button>
                 </form>
               </TabsContent>
@@ -210,19 +318,31 @@ function Auth() {
 
           {!aguardandoConfirmacao ? (
             <>
-              <div className="my-4 flex items-center gap-3">
+              <div className="my-3 flex items-center gap-3">
                 <span className="h-px flex-1 bg-border" />
-                <span className="text-xs text-muted-foreground">ou</span>
+                <span className="text-[11px] text-muted-foreground">ou acesso rápido</span>
                 <span className="h-px flex-1 bg-border" />
               </div>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full font-medium"
                 onClick={comGoogle}
                 disabled={carregando}
               >
                 Entrar com Google
               </Button>
+
+              <div className="rounded-lg bg-muted/60 p-3 text-[11px] text-muted-foreground space-y-1 border border-border/60">
+                <p className="font-semibold text-foreground flex items-center gap-1.5">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Ambiente de Teste & Validação
+                </p>
+                <p>
+                  Para testar agora mesmo, clique em <strong>Entrar com Google</strong> com sua
+                  conta autorizada ou utilize a aba <strong>Código</strong> para receber acesso
+                  imediato sem senha.
+                </p>
+              </div>
             </>
           ) : null}
         </div>
