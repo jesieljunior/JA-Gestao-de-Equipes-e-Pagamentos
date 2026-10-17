@@ -112,13 +112,7 @@ function Fechamento() {
   });
 
   const decidir = useMutation({
-    mutationFn: async ({
-      id,
-      status,
-    }: {
-      id: string;
-      status: "aprovado" | "contestado";
-    }) => {
+    mutationFn: async ({ id, status }: { id: string; status: "aprovado" | "contestado" }) => {
       const { error } = await supabase
         .from("fechamentos")
         .update({
@@ -220,9 +214,7 @@ function Fechamento() {
                           className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
                         >
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">
-                              {es.freelancers?.nome}
-                            </p>
+                            <p className="truncate text-sm font-medium">{es.freelancers?.nome}</p>
                             <p className="truncate text-xs text-muted-foreground">
                               {es.equipe} · {moeda(es.valor_combinado)}{" "}
                               {ROTULO_TIPO_VALOR[es.tipo_valor]}
@@ -230,8 +222,7 @@ function Fechamento() {
                           </div>
                           <div className="flex flex-wrap items-center gap-3 text-sm">
                             <span className="tabular-nums text-muted-foreground">
-                              {(f ? Number(f.horas_trabalhadas) : previa.horas).toFixed(2)}{" "}
-                              h
+                              {(f ? Number(f.horas_trabalhadas) : previa.horas).toFixed(2)} h
                             </span>
                             <span className="tabular-nums font-medium">
                               {moeda(f ? f.valor_calculado : previa.valor)}
@@ -248,9 +239,7 @@ function Fechamento() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() =>
-                                      decidir.mutate({ id: f.id, status: "aprovado" })
-                                    }
+                                    onClick={() => decidir.mutate({ id: f.id, status: "aprovado" })}
                                   >
                                     <Check className="size-4" /> Aprovar
                                   </Button>

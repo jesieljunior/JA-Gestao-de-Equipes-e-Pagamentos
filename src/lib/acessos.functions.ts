@@ -33,22 +33,26 @@ async function criarUsuario(
 
   const userId = data.user.id;
   try {
+    const empresaEfetiva = papelPlataforma ? null : empresaId;
     const { error: usuarioError } = await supabaseAdmin
       .from("usuarios")
-      .upsert({ id: userId, nome, email, empresa_id: empresaId, ativo: true });
+      .upsert({ id: userId, nome, email, empresa_id: empresaEfetiva, ativo: true });
     if (usuarioError) throw usuarioError;
 
-    if (papelAgencia) {
-      const { error: papelError } = await supabaseAdmin
-        .from("user_roles")
-        .insert({ user_id: userId, role: papelAgencia });
-      if (papelError) throw papelError;
-    }
     if (papelPlataforma) {
+      // Conta de plataforma não pode ter papéis organizacionais nem vínculo com agência
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
       const { error: plataformaError } = await supabaseAdmin
         .from("plataforma_usuarios")
         .insert({ user_id: userId, papel: papelPlataforma });
       if (plataformaError) throw plataformaError;
+    } else if (papelAgencia) {
+      // Conta organizacional não pode ter privilégios na plataforma
+      await supabaseAdmin.from("plataforma_usuarios").delete().eq("user_id", userId);
+      const { error: papelError } = await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id: userId, role: papelAgencia });
+      if (papelError) throw papelError;
     }
     return { email, senha, nome };
   } catch (erro) {

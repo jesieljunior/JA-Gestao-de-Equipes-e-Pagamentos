@@ -23,9 +23,9 @@ export const Route = createFileRoute("/api/internal/purgar-selfies-ponto")({
           .filter((caminho): caminho is string => Boolean(caminho));
         if (!expiradas?.length) return Response.json({ removidas: 0 });
 
-        const { error: storageError } = caminhos.length ? await supabaseAdmin.storage
-          .from("selfies-ponto")
-          .remove(caminhos) : { error: null };
+        const { error: storageError } = caminhos.length
+          ? await supabaseAdmin.storage.from("selfies-ponto").remove(caminhos)
+          : { error: null };
         if (storageError) return Response.json({ error: storageError.message }, { status: 500 });
 
         const ids = (expiradas ?? []).map((ponto) => ponto.id);

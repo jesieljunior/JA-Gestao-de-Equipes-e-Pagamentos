@@ -8,11 +8,15 @@
 
 async function exigirCadastroFiscalValidado(supabase: any, empresaId: string) {
   const { data, error } = await supabase.rpc("empresa_fiscal_validada", { _empresa_id: empresaId });
-  if (error || !data) throw new Error("Pix bloqueado: complete e aguarde a validação fiscal da agência.");
+  if (error || !data)
+    throw new Error("Pix bloqueado: complete e aguarde a validação fiscal da agência.");
 }
 
 /** Resolve a empresa do pagamento seguindo a cadeia de dependência do pagamento. */
-export async function resolverEmpresaDoPagamento(supabase: any, pagamentoId: string): Promise<string> {
+export async function resolverEmpresaDoPagamento(
+  supabase: any,
+  pagamentoId: string,
+): Promise<string> {
   const { data: pagamento } = await supabase
     .from("pagamentos")
     .select("id, fechamento_id")
@@ -63,7 +67,7 @@ export async function enviarPix(supabase: any, pagamentoId: string, empresaId?: 
   if (!pagamento) throw new Error("Pagamento não encontrado.");
   if (pagamento.status === "executado") throw new Error("Pagamento já executado.");
 
-  const primeiro = <T,>(v: T | T[] | null | undefined): T | null =>
+  const primeiro = <T>(v: T | T[] | null | undefined): T | null =>
     Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
 
   const fechamento: any = primeiro(pagamento.fechamentos);
@@ -89,7 +93,8 @@ export async function enviarPix(supabase: any, pagamentoId: string, empresaId?: 
     }
     const { exigirRecursoPlano } = await import("./plano.server");
     await exigirRecursoPlano(supabase, empresaDestino, "financeiro");
-    if (pagamento.status === "agendado") await exigirRecursoPlano(supabase, empresaDestino, "agendamento_pix");
+    if (pagamento.status === "agendado")
+      await exigirRecursoPlano(supabase, empresaDestino, "agendamento_pix");
     await exigirCadastroFiscalValidado(supabase, empresaDestino);
     const { data: saldo } = await supabase.rpc("saldo_empresa", { _empresa_id: empresaDestino });
     if (Number(saldo ?? 0) < valor)

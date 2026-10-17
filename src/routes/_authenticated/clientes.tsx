@@ -68,13 +68,7 @@ export const Route = createFileRoute("/_authenticated/clientes")({
   component: Clientes,
 });
 
-function FormCliente({
-  cliente,
-  onFechar,
-}: {
-  cliente?: Cliente;
-  onFechar: () => void;
-}) {
+function FormCliente({ cliente, onFechar }: { cliente?: Cliente; onFechar: () => void }) {
   const { empresaId, pode } = useSessao();
   const queryClient = useQueryClient();
   const [nome, setNome] = useState(cliente?.nome ?? "");
@@ -116,7 +110,9 @@ function FormCliente({
       const documentoLimpo = soDigitos(documento);
       const tamanhoEsperado = tipoPessoa === "pf" ? 11 : 14;
       if (documentoLimpo.length !== tamanhoEsperado) {
-        throw new Error(tipoPessoa === "pf" ? "CPF deve ter 11 dígitos." : "CNPJ deve ter 14 dígitos.");
+        throw new Error(
+          tipoPessoa === "pf" ? "CPF deve ter 11 dígitos." : "CNPJ deve ter 14 dígitos.",
+        );
       }
       if (uf && uf.trim().length !== 2) throw new Error("UF deve ter duas letras.");
       const dia = vencimento ? Number(vencimento) : null;
@@ -155,9 +151,7 @@ function FormCliente({
       };
       const { error } = cliente
         ? await supabase.from("clientes").update(payload).eq("id", cliente.id)
-        : await supabase
-            .from("clientes")
-            .insert({ ...payload, empresa_id: empresaId });
+        : await supabase.from("clientes").insert({ ...payload, empresa_id: empresaId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -177,53 +171,260 @@ function FormCliente({
       className="max-h-[75vh] space-y-5 overflow-y-auto pr-1"
     >
       <section className="space-y-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold"><Building2 className="size-4" /> Identificação</h3>
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <Building2 className="size-4" /> Identificação
+        </h3>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5"><Label>Tipo</Label><Select value={tipoPessoa} onValueChange={(v) => { const tipo = v as TipoPessoa; setTipoPessoa(tipo); setDocumento(""); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pj">Pessoa jurídica</SelectItem><SelectItem value="pf">Pessoa física</SelectItem></SelectContent></Select></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-documento">{tipoPessoa === "pf" ? "CPF" : "CNPJ"}</Label><Input id="cliente-documento" required inputMode="numeric" value={documento} onChange={(e) => setDocumento(formatarDocumento(e.target.value, tipoPessoa))} /></div>
-          <div className="space-y-1.5 sm:col-span-2"><Label htmlFor="cliente-nome">Nome de exibição</Label><Input id="cliente-nome" required value={nome} onChange={(e) => setNome(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-razao">{tipoPessoa === "pj" ? "Razão social" : "Nome legal"}</Label><Input id="cliente-razao" value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-fantasia">Nome fantasia</Label><Input id="cliente-fantasia" value={nomeFantasia} onChange={(e) => setNomeFantasia(e.target.value)} /></div>
+          <div className="space-y-1.5">
+            <Label>Tipo</Label>
+            <Select
+              value={tipoPessoa}
+              onValueChange={(v) => {
+                const tipo = v as TipoPessoa;
+                setTipoPessoa(tipo);
+                setDocumento("");
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pj">Pessoa jurídica</SelectItem>
+                <SelectItem value="pf">Pessoa física</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-documento">{tipoPessoa === "pf" ? "CPF" : "CNPJ"}</Label>
+            <Input
+              id="cliente-documento"
+              required
+              inputMode="numeric"
+              value={documento}
+              onChange={(e) => setDocumento(formatarDocumento(e.target.value, tipoPessoa))}
+            />
+          </div>
+          <div className="space-y-1.5 sm:col-span-2">
+            <Label htmlFor="cliente-nome">Nome de exibição</Label>
+            <Input
+              id="cliente-nome"
+              required
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-razao">
+              {tipoPessoa === "pj" ? "Razão social" : "Nome legal"}
+            </Label>
+            <Input
+              id="cliente-razao"
+              value={razaoSocial}
+              onChange={(e) => setRazaoSocial(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-fantasia">Nome fantasia</Label>
+            <Input
+              id="cliente-fantasia"
+              value={nomeFantasia}
+              onChange={(e) => setNomeFantasia(e.target.value)}
+            />
+          </div>
         </div>
-        <div className="flex items-center justify-between rounded-md border border-border px-3 py-2"><Label htmlFor="cliente-ativo" className="font-normal">Cliente ativo</Label><Switch id="cliente-ativo" checked={ativo} onCheckedChange={setAtivo} /></div>
+        <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+          <Label htmlFor="cliente-ativo" className="font-normal">
+            Cliente ativo
+          </Label>
+          <Switch id="cliente-ativo" checked={ativo} onCheckedChange={setAtivo} />
+        </div>
       </section>
 
       <section className="space-y-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold"><Mail className="size-4" /> Contato</h3>
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <Mail className="size-4" /> Contato
+        </h3>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5"><Label htmlFor="cliente-email">E-mail</Label><Input id="cliente-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-email-fin">E-mail financeiro</Label><Input id="cliente-email-fin" type="email" value={emailFinanceiro} onChange={(e) => setEmailFinanceiro(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-tel">Telefone</Label><Input id="cliente-tel" value={telefone} onChange={(e) => setTelefone(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label>Canal preferencial</Label><Select value={canal} onValueChange={setCanal}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="email">E-mail</SelectItem><SelectItem value="telefone">Telefone</SelectItem><SelectItem value="whatsapp">WhatsApp</SelectItem></SelectContent></Select></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-resp">Responsável</Label><Input id="cliente-resp" value={responsavelNome} onChange={(e) => setResponsavelNome(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-cargo">Cargo</Label><Input id="cliente-cargo" value={responsavelCargo} onChange={(e) => setResponsavelCargo(e.target.value)} /></div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-email">E-mail</Label>
+            <Input
+              id="cliente-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-email-fin">E-mail financeiro</Label>
+            <Input
+              id="cliente-email-fin"
+              type="email"
+              value={emailFinanceiro}
+              onChange={(e) => setEmailFinanceiro(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-tel">Telefone</Label>
+            <Input
+              id="cliente-tel"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Canal preferencial</Label>
+            <Select value={canal} onValueChange={setCanal}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="email">E-mail</SelectItem>
+                <SelectItem value="telefone">Telefone</SelectItem>
+                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-resp">Responsável</Label>
+            <Input
+              id="cliente-resp"
+              value={responsavelNome}
+              onChange={(e) => setResponsavelNome(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-cargo">Cargo</Label>
+            <Input
+              id="cliente-cargo"
+              value={responsavelCargo}
+              onChange={(e) => setResponsavelCargo(e.target.value)}
+            />
+          </div>
         </div>
       </section>
 
       <section className="space-y-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold"><MapPin className="size-4" /> Endereço</h3>
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <MapPin className="size-4" /> Endereço
+        </h3>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5"><Label htmlFor="cliente-cep">CEP</Label><Input id="cliente-cep" inputMode="numeric" maxLength={9} value={cep} onChange={(e) => setCep(soDigitos(e.target.value).slice(0, 8))} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-logradouro">Logradouro</Label><Input id="cliente-logradouro" value={logradouro} onChange={(e) => setLogradouro(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-numero">Número</Label><Input id="cliente-numero" value={numero} onChange={(e) => setNumero(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-complemento">Complemento</Label><Input id="cliente-complemento" value={complemento} onChange={(e) => setComplemento(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-bairro">Bairro</Label><Input id="cliente-bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-cidade">Cidade</Label><Input id="cliente-cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-uf">UF</Label><Input id="cliente-uf" maxLength={2} value={uf} onChange={(e) => setUf(e.target.value.toUpperCase())} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-cod-mun">Código do município</Label><Input id="cliente-cod-mun" inputMode="numeric" value={codigoMunicipio} onChange={(e) => setCodigoMunicipio(soDigitos(e.target.value))} /></div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-cep">CEP</Label>
+            <Input
+              id="cliente-cep"
+              inputMode="numeric"
+              maxLength={9}
+              value={cep}
+              onChange={(e) => setCep(soDigitos(e.target.value).slice(0, 8))}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-logradouro">Logradouro</Label>
+            <Input
+              id="cliente-logradouro"
+              value={logradouro}
+              onChange={(e) => setLogradouro(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-numero">Número</Label>
+            <Input id="cliente-numero" value={numero} onChange={(e) => setNumero(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-complemento">Complemento</Label>
+            <Input
+              id="cliente-complemento"
+              value={complemento}
+              onChange={(e) => setComplemento(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-bairro">Bairro</Label>
+            <Input id="cliente-bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-cidade">Cidade</Label>
+            <Input id="cliente-cidade" value={cidade} onChange={(e) => setCidade(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-uf">UF</Label>
+            <Input
+              id="cliente-uf"
+              maxLength={2}
+              value={uf}
+              onChange={(e) => setUf(e.target.value.toUpperCase())}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-cod-mun">Código do município</Label>
+            <Input
+              id="cliente-cod-mun"
+              inputMode="numeric"
+              value={codigoMunicipio}
+              onChange={(e) => setCodigoMunicipio(soDigitos(e.target.value))}
+            />
+          </div>
         </div>
       </section>
 
       <section className="space-y-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold"><ReceiptText className="size-4" /> Fiscal e cobrança</h3>
-        <p className="text-xs text-muted-foreground">Dados informativos. A plataforma não calcula tributos nem emite notas automaticamente.</p>
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <ReceiptText className="size-4" /> Fiscal e cobrança
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Dados informativos. A plataforma não calcula tributos nem emite notas automaticamente.
+        </p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5"><Label htmlFor="cliente-im">Inscrição municipal</Label><Input id="cliente-im" value={inscricaoMunicipal} onChange={(e) => setInscricaoMunicipal(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-ie">Inscrição estadual</Label><Input id="cliente-ie" disabled={isento} value={inscricaoEstadual} onChange={(e) => setInscricaoEstadual(e.target.value)} /></div>
-          <div className="flex items-center justify-between rounded-md border border-border px-3 py-2"><Label htmlFor="cliente-isento" className="font-normal">Isento de inscrição estadual</Label><Switch id="cliente-isento" checked={isento} onCheckedChange={setIsento} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-regime">Regime/observação fiscal</Label><Input id="cliente-regime" value={regimeFiscal} onChange={(e) => setRegimeFiscal(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-servico">Código de serviço</Label><Input id="cliente-servico" value={codigoServico} onChange={(e) => setCodigoServico(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label htmlFor="cliente-vencimento">Dia preferencial de vencimento</Label><Input id="cliente-vencimento" type="number" min={1} max={31} value={vencimento} onChange={(e) => setVencimento(e.target.value)} /></div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-im">Inscrição municipal</Label>
+            <Input
+              id="cliente-im"
+              value={inscricaoMunicipal}
+              onChange={(e) => setInscricaoMunicipal(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-ie">Inscrição estadual</Label>
+            <Input
+              id="cliente-ie"
+              disabled={isento}
+              value={inscricaoEstadual}
+              onChange={(e) => setInscricaoEstadual(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+            <Label htmlFor="cliente-isento" className="font-normal">
+              Isento de inscrição estadual
+            </Label>
+            <Switch id="cliente-isento" checked={isento} onCheckedChange={setIsento} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-regime">Regime/observação fiscal</Label>
+            <Input
+              id="cliente-regime"
+              value={regimeFiscal}
+              onChange={(e) => setRegimeFiscal(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-servico">Código de serviço</Label>
+            <Input
+              id="cliente-servico"
+              value={codigoServico}
+              onChange={(e) => setCodigoServico(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cliente-vencimento">Dia preferencial de vencimento</Label>
+            <Input
+              id="cliente-vencimento"
+              type="number"
+              min={1}
+              max={31}
+              value={vencimento}
+              onChange={(e) => setVencimento(e.target.value)}
+            />
+          </div>
         </div>
       </section>
 
@@ -254,21 +455,19 @@ function Clientes() {
   const q = useQuery({
     queryKey: ["clientes"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clientes")
-        .select("*")
-        .order("nome");
+      const { data, error } = await supabase.from("clientes").select("*").order("nome");
       if (error) throw error;
       return data;
     },
   });
 
   const termo = busca.trim().toLowerCase();
-  const lista = (q.data ?? []).filter((c) =>
-    c.nome.toLowerCase().includes(termo) ||
-    (c.razao_social ?? "").toLowerCase().includes(termo) ||
-    (c.cpf_cnpj ?? "").includes(soDigitos(termo)) ||
-    (c.email ?? "").toLowerCase().includes(termo),
+  const lista = (q.data ?? []).filter(
+    (c) =>
+      c.nome.toLowerCase().includes(termo) ||
+      (c.razao_social ?? "").toLowerCase().includes(termo) ||
+      (c.cpf_cnpj ?? "").includes(soDigitos(termo)) ||
+      (c.email ?? "").toLowerCase().includes(termo),
   );
 
   return (
@@ -276,19 +475,21 @@ function Clientes() {
       titulo="Clientes"
       descricao="Contratantes dos eventos"
       acoes={
-        pode("cadastros.gerenciar") ? <Dialog open={novo} onOpenChange={setNovo}>
-          <DialogTrigger asChild>
-            <Button size="sm">
-              <Plus className="size-4" /> Novo cliente
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Novo cliente</DialogTitle>
-            </DialogHeader>
-            <FormCliente onFechar={() => setNovo(false)} />
-          </DialogContent>
-        </Dialog> : null
+        pode("cadastros.gerenciar") ? (
+          <Dialog open={novo} onOpenChange={setNovo}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="size-4" /> Novo cliente
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Novo cliente</DialogTitle>
+              </DialogHeader>
+              <FormCliente onFechar={() => setNovo(false)} />
+            </DialogContent>
+          </Dialog>
+        ) : null
       }
     >
       <Input
@@ -312,10 +513,29 @@ function Clientes() {
           {lista.map((c) => (
             <li key={c.id} className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{c.nome}{!c.ativo ? <span className="ml-2 text-xs text-muted-foreground">inativo</span> : null}</p>
-                <p className="truncate text-xs text-muted-foreground">{[c.cpf_cnpj ? formatarDocumento(c.cpf_cnpj, c.tipo_pessoa) : null, c.email_financeiro ?? c.email, c.cidade && c.uf ? `${c.cidade}/${c.uf}` : c.cidade].filter(Boolean).join(" · ") || "Cadastro incompleto"}</p>
+                <p className="truncate text-sm font-medium">
+                  {c.nome}
+                  {!c.ativo ? (
+                    <span className="ml-2 text-xs text-muted-foreground">inativo</span>
+                  ) : null}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {[
+                    c.cpf_cnpj ? formatarDocumento(c.cpf_cnpj, c.tipo_pessoa) : null,
+                    c.email_financeiro ?? c.email,
+                    c.cidade && c.uf ? `${c.cidade}/${c.uf}` : c.cidade,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || "Cadastro incompleto"}
+                </p>
               </div>
-              <Button size="sm" variant="ghost" disabled={!pode("cadastros.gerenciar")} onClick={() => setEditando(c)} aria-label={`Editar ${c.nome}`}>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={!pode("cadastros.gerenciar")}
+                onClick={() => setEditando(c)}
+                aria-label={`Editar ${c.nome}`}
+              >
                 <Pencil className="size-3.5" />
               </Button>
             </li>
@@ -328,9 +548,7 @@ function Clientes() {
           <DialogHeader>
             <DialogTitle>Editar cliente</DialogTitle>
           </DialogHeader>
-          {editando ? (
-            <FormCliente cliente={editando} onFechar={() => setEditando(null)} />
-          ) : null}
+          {editando ? <FormCliente cliente={editando} onFechar={() => setEditando(null)} /> : null}
         </DialogContent>
       </Dialog>
     </AppShell>

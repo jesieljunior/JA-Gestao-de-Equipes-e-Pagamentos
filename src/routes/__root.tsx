@@ -8,7 +8,7 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -20,9 +20,7 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">
-          Página não encontrada
-        </h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           O endereço acessado não existe ou foi movido.
         </p>
@@ -42,7 +40,10 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
-  const reportedError = error instanceof Error ? error : new Error(String(error));
+  const reportedError = useMemo(
+    () => (error instanceof Error ? error : new Error(String(error))),
+    [error],
+  );
   useEffect(() => {
     reportLovableError(reportedError, { boundary: "tanstack_root_error_component" });
   }, [reportedError]);
@@ -81,11 +82,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PayCrew" },
+      { title: "PayCrew — SaaS de Equipes e Ponto por Swali" },
       {
         name: "description",
         content:
-          "PayCrew — gestão de equipes freelancers de eventos: escala, operação em campo, fechamento de horas e pagamento.",
+          "PayCrew — SaaS desenvolvido pela Swali (swali.com.br) para gestão de equipes, folha de ponto digital em campo com selfie e GPS, conferência e pagamento Pix.",
+      },
+      { property: "og:title", content: "PayCrew — SaaS de Equipes e Ponto por Swali" },
+      {
+        property: "og:description",
+        content:
+          "Plataforma empresarial Swali para controle operacional de eventos, folha de ponto por QR Code e fechamento financeiro.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -121,12 +128,7 @@ function RootComponent() {
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (
-        event !== "SIGNED_IN" &&
-        event !== "SIGNED_OUT" &&
-        event !== "USER_UPDATED"
-      )
-        return;
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       if (event === "SIGNED_OUT") queryClient.clear();
       else queryClient.invalidateQueries();
       router.invalidate();

@@ -2,7 +2,7 @@
 
 ## 1. Por que o aporte falhou
 
-O erro registrado nas duas tentativas foi: *"A chave de API informada não pertence a este ambiente"*. A chave cadastrada é de produção, mas o app está apontando para o ambiente de teste do Asaas. Correção: trocar o ambiente para produção. Nada mais precisa mudar na integração.
+O erro registrado nas duas tentativas foi: _"A chave de API informada não pertence a este ambiente"_. A chave cadastrada é de produção, mas o app está apontando para o ambiente de teste do Asaas. Correção: trocar o ambiente para produção. Nada mais precisa mudar na integração.
 
 ## 2. A agência coloca saldo sozinha
 
@@ -27,12 +27,14 @@ Na tela de Configurações, o bloco de plano vira **somente leitura**: mostra o 
 **Portal da agência (o que já existe)** — eventos, equipes, freelancers, ponto, fechamento, saldo e pagamentos. Sem acesso a preço, a outras agências ou a dados da plataforma.
 
 **Painel de suporte (`/suporte`)** — para seu funcionário:
+
 - lista de agências com saldo, plano e situação;
 - busca de evento, cobrança ou pagamento de qualquer agência;
 - pode reenviar um Pix que falhou e reconferir uma cobrança;
 - não altera plano, preço, cupom nem cadastro de agência.
 
 **Portal master (`/admin`)** — só você:
+
 - **Agências**: plano, teste grátis (liberar/estender), bloquear/liberar, taxa e mensalidade específicas quando quiser fugir do plano;
 - **Planos**: criar e editar Free / Pro / Enterprise com percentual, taxa por Pix e mensalidade;
 - **Cupons**: código, desconto (% ou valor), validade, limite de uso e a quem se aplica;
@@ -42,6 +44,7 @@ Na tela de Configurações, o bloco de plano vira **somente leitura**: mostra o 
 ## 5. Detalhes técnicos
 
 Banco (uma migração):
+
 - `planos` (nome, percentual, taxa fixa Pix, mensalidade, ativo);
 - `cupons` (código, tipo, valor, validade, usos, empresa opcional);
 - `assinaturas` por empresa (plano, trial_ate, cupom, status, overrides de percentual/mensalidade);

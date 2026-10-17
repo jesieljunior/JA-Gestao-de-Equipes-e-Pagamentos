@@ -87,9 +87,7 @@ function useEquipes(eventoId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("equipes")
-        .select(
-          "*, usuarios(nome), escalas(*, freelancers(id, nome, funcao, chave_pix))",
-        )
+        .select("*, usuarios(nome), escalas(*, freelancers(id, nome, funcao, chave_pix))")
         .eq("evento_id", eventoId)
         .order("criado_em");
       if (error) throw error;
@@ -120,13 +118,7 @@ function Stepper({ atual }: { atual: StatusEvento }) {
   );
 }
 
-function FormEquipe({
-  eventoId,
-  onFechar,
-}: {
-  eventoId: string;
-  onFechar: () => void;
-}) {
+function FormEquipe({ eventoId, onFechar }: { eventoId: string; onFechar: () => void }) {
   const queryClient = useQueryClient();
   const [nome, setNome] = useState("");
   const [supervisorId, setSupervisorId] = useState("");
@@ -134,10 +126,7 @@ function FormEquipe({
   const usuarios = useQuery({
     queryKey: ["usuarios"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("usuarios")
-        .select("id, nome")
-        .order("nome");
+      const { data, error } = await supabase.from("usuarios").select("id, nome").order("nome");
       if (error) throw error;
       return data;
     },
@@ -346,10 +335,7 @@ function DetalheEvento() {
       const atual = evento.data!.status;
       const erro = validarTransicao(atual, novo);
       if (erro) throw new Error(erro);
-      const { error } = await supabase
-        .from("eventos")
-        .update({ status: novo })
-        .eq("id", eventoId);
+      const { error } = await supabase.from("eventos").update({ status: novo }).eq("id", eventoId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -361,13 +347,7 @@ function DetalheEvento() {
   });
 
   const mudarEscala = useMutation({
-    mutationFn: async ({
-      id,
-      status,
-    }: {
-      id: string;
-      status: "confirmado" | "recusado";
-    }) => {
+    mutationFn: async ({ id, status }: { id: string; status: "confirmado" | "recusado" }) => {
       const { error } = await supabase
         .from("escalas")
         .update({
@@ -411,9 +391,7 @@ function DetalheEvento() {
   const e = evento.data;
   const proximo = proximoStatus(e.status);
   const urlPonto =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/ponto/${e.qr_code_token}`
-      : "";
+    typeof window !== "undefined" ? `${window.location.origin}/ponto/${e.qr_code_token}` : "";
 
   return (
     <AppShell
@@ -430,11 +408,7 @@ function DetalheEvento() {
             </Button>
           ) : null}
           {podeCancelar(e.status) ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => mudarStatus.mutate("cancelado")}
-            >
+            <Button size="sm" variant="outline" onClick={() => mudarStatus.mutate("cancelado")}>
               <Ban className="size-4" /> Cancelar
             </Button>
           ) : null}
@@ -492,12 +466,9 @@ function DetalheEvento() {
                         className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">
-                            {es.freelancers?.nome}
-                          </p>
+                          <p className="truncate text-sm font-medium">{es.freelancers?.nome}</p>
                           <p className="truncate text-xs text-muted-foreground">
-                            {moeda(es.valor_combinado)} ·{" "}
-                            {ROTULO_TIPO_VALOR[es.tipo_valor]}
+                            {moeda(es.valor_combinado)} · {ROTULO_TIPO_VALOR[es.tipo_valor]}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -558,8 +529,7 @@ function DetalheEvento() {
             <div className="min-w-0">
               <p className="text-sm font-medium">QR Code de ponto deste evento</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                A equipe registra entrada, intervalo e saída lendo este código e
-                informando o CPF.
+                A equipe registra entrada, intervalo e saída lendo este código e informando o CPF.
               </p>
               <p className="mt-2 break-all text-xs text-muted-foreground">{urlPonto}</p>
               {e.qr_code_expira_em ? (
@@ -621,10 +591,7 @@ function DetalheEvento() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={Boolean(substituindo)}
-        onOpenChange={(o) => !o && setSubstituindo(null)}
-      >
+      <Dialog open={Boolean(substituindo)} onOpenChange={(o) => !o && setSubstituindo(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Substituir freelancer</DialogTitle>

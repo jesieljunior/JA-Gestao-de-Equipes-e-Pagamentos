@@ -127,10 +127,7 @@ function Saldo() {
   };
 
   return (
-    <AppShell
-      titulo="Saldo"
-      descricao="Coloque dinheiro na conta da agência para pagar a equipe"
-    >
+    <AppShell titulo="Saldo" descricao="Coloque dinheiro na conta da agência para pagar a equipe">
       <div className="mb-4 flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3">
         <Wallet className="size-5 text-muted-foreground" />
         <div>

@@ -24,12 +24,14 @@ async function contextoOperacao(
 export const decidirPonto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      pontoId: z.string().uuid(),
-      escalaId: z.string().uuid(),
-      status: z.enum(["aprovado", "recusado"]),
-      motivo: z.string().trim().max(500).optional(),
-    }).parse(input),
+    z
+      .object({
+        pontoId: z.string().uuid(),
+        escalaId: z.string().uuid(),
+        status: z.enum(["aprovado", "recusado"]),
+        motivo: z.string().trim().max(500).optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { empresaId } = await contextoOperacao(context.supabase, context.userId, data.escalaId);
@@ -66,23 +68,29 @@ export const decidirPonto = createServerFn({ method: "POST" })
 export const lancarPontoManual = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({
-      escalaId: z.string().uuid(),
-      tipo: tipoPonto,
-      registradoEm: z.string().datetime(),
-    }).parse(input),
+    z
+      .object({
+        escalaId: z.string().uuid(),
+        tipo: tipoPonto,
+        registradoEm: z.string().datetime(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { empresaId } = await contextoOperacao(context.supabase, context.userId, data.escalaId);
-    const { data: ponto, error } = await context.supabase.from("pontos").insert({
-      escala_id: data.escalaId,
-      tipo: data.tipo,
-      metodo: "manual",
-      registrado_em: data.registradoEm,
-      status: "aprovado",
-      aprovado_por_id: context.userId,
-      aprovado_em: new Date().toISOString(),
-    }).select("id").single();
+    const { data: ponto, error } = await context.supabase
+      .from("pontos")
+      .insert({
+        escala_id: data.escalaId,
+        tipo: data.tipo,
+        metodo: "manual",
+        registrado_em: data.registradoEm,
+        status: "aprovado",
+        aprovado_por_id: context.userId,
+        aprovado_em: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
     if (error) throw error;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("logs_auditoria").insert({
@@ -108,17 +116,21 @@ export const rotacionarQrEvento = createServerFn({ method: "POST" })
       .select("empresa_id, data_fim")
       .eq("id", data.eventoId)
       .maybeSingle();
-    if (!evento || evento.empresa_id !== contexto.empresaId) throw new Error("Evento não encontrado.");
+    if (!evento || evento.empresa_id !== contexto.empresaId)
+      throw new Error("Evento não encontrado.");
     const geradoEm = new Date();
     const expiraEm = evento.data_fim
       ? new Date(new Date(evento.data_fim).getTime() + 12 * 60 * 60_000).toISOString()
       : null;
     const token = crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
-    const { error } = await context.supabase.from("eventos").update({
-      qr_code_token: token,
-      qr_code_gerado_em: geradoEm.toISOString(),
-      qr_code_expira_em: expiraEm,
-    }).eq("id", data.eventoId);
+    const { error } = await context.supabase
+      .from("eventos")
+      .update({
+        qr_code_token: token,
+        qr_code_gerado_em: geradoEm.toISOString(),
+        qr_code_expira_em: expiraEm,
+      })
+      .eq("id", data.eventoId);
     if (error) throw error;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("logs_auditoria").insert({

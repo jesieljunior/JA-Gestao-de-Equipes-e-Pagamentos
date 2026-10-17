@@ -90,7 +90,9 @@ function Admin() {
           <TabsTrigger value="equipe">Equipe</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="visao" className="mt-4"><MasterOverview /></TabsContent>
+        <TabsContent value="visao" className="mt-4">
+          <MasterOverview />
+        </TabsContent>
         <TabsContent value="agencias" className="mt-4">
           <Agencias />
         </TabsContent>
@@ -126,10 +128,12 @@ function Agencias() {
       if (empresas.error) throw empresas.error;
       if (assinaturas.error) throw assinaturas.error;
       if (planos.error) throw planos.error;
-      const usos = await Promise.all(empresas.data.map(async (empresa) => {
-        const resultado = await supabase.rpc("resumo_uso_empresa", { _empresa_id: empresa.id });
-        return [empresa.id, resultado.data?.[0] ?? null] as const;
-      }));
+      const usos = await Promise.all(
+        empresas.data.map(async (empresa) => {
+          const resultado = await supabase.rpc("resumo_uso_empresa", { _empresa_id: empresa.id });
+          return [empresa.id, resultado.data?.[0] ?? null] as const;
+        }),
+      );
       return {
         empresas: empresas.data,
         assinaturas: assinaturas.data,
@@ -172,8 +176,13 @@ function Agencias() {
   });
 
   const revisarFiscal = useMutation({
-    mutationFn: ({ empresaId, decisao }: { empresaId: string; decisao: "validado" | "rejeitado" }) =>
-      revisarFiscalFn({ data: { empresaId, decisao } }),
+    mutationFn: ({
+      empresaId,
+      decisao,
+    }: {
+      empresaId: string;
+      decisao: "validado" | "rejeitado";
+    }) => revisarFiscalFn({ data: { empresaId, decisao } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "agencias"] });
       toast.success("Cadastro fiscal revisado.");
@@ -201,9 +210,16 @@ function Agencias() {
                   {a?.trial_ate ? ` · teste até ${a.trial_ate}` : ""}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Fiscal: {e.fiscal_status} · {[e.razao_social, e.municipio, e.uf].filter(Boolean).join(" · ") || "dados incompletos"}
+                  Fiscal: {e.fiscal_status} ·{" "}
+                  {[e.razao_social, e.municipio, e.uf].filter(Boolean).join(" · ") ||
+                    "dados incompletos"}
                 </p>
-                {uso ? <p className="mt-1 text-xs text-muted-foreground">Ciclo atual: {uso.participacoes_usadas} participações · {uso.participacoes_excedentes} excedentes · {uso.clt_ativos} CLT ativos</p> : null}
+                {uso ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Ciclo atual: {uso.participacoes_usadas} participações ·{" "}
+                    {uso.participacoes_excedentes} excedentes · {uso.clt_ativos} CLT ativos
+                  </p>
+                ) : null}
               </div>
               <label className="flex items-center gap-2 text-xs">
                 Ativa
@@ -214,8 +230,21 @@ function Agencias() {
               </label>
               {e.fiscal_status === "pendente" ? (
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" disabled={revisarFiscal.isPending} onClick={() => revisarFiscal.mutate({ empresaId: e.id, decisao: "rejeitado" })}>Rejeitar fiscal</Button>
-                  <Button size="sm" disabled={revisarFiscal.isPending} onClick={() => revisarFiscal.mutate({ empresaId: e.id, decisao: "validado" })}>Validar fiscal</Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={revisarFiscal.isPending}
+                    onClick={() => revisarFiscal.mutate({ empresaId: e.id, decisao: "rejeitado" })}
+                  >
+                    Rejeitar fiscal
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={revisarFiscal.isPending}
+                    onClick={() => revisarFiscal.mutate({ empresaId: e.id, decisao: "validado" })}
+                  >
+                    Validar fiscal
+                  </Button>
                 </div>
               ) : null}
             </div>
@@ -378,19 +407,64 @@ function Planos() {
                   }
                 />
               </div>
-              {([
-                ["participacoes_incluidas", "Participações incluídas"], ["valor_excedente", "Excedente por participação (R$)"],
-                ["limite_eventos_ciclo", "Eventos por ciclo"], ["limite_pessoas_evento", "Pessoas por evento"],
-                ["limite_clt", "CLT ativos"], ["limite_supervisores", "Supervisores"],
-                ["retencao_evidencias_dias", "Retenção de evidências (dias)"], ["aviso_vendas_acima", "Avisar vendas acima de"],
-              ] as const).map(([campo, label]) => <div key={campo} className="space-y-1.5"><Label>{label}</Label><Input type="number" min={0} step={campo === "valor_excedente" ? "0.01" : "1"} placeholder="Sem limite" defaultValue={p[campo] ?? ""} onBlur={e => {
-                const nullable = campo !== "participacoes_incluidas" && campo !== "valor_excedente";
-                const valor = e.target.value === "" && nullable ? null : Number(e.target.value);
-                if (valor !== null && (!Number.isFinite(valor) || valor < 0 || (campo !== "valor_excedente" && !Number.isInteger(valor)))) { toast.error("Valor inválido."); return; }
-                salvar.mutate({ id: p.id, patch: { [campo]: valor } });
-              }} /></div>)}
+              {(
+                [
+                  ["participacoes_incluidas", "Participações incluídas"],
+                  ["valor_excedente", "Excedente por participação (R$)"],
+                  ["limite_eventos_ciclo", "Eventos por ciclo"],
+                  ["limite_pessoas_evento", "Pessoas por evento"],
+                  ["limite_clt", "CLT ativos"],
+                  ["limite_supervisores", "Supervisores"],
+                  ["retencao_evidencias_dias", "Retenção de evidências (dias)"],
+                  ["aviso_vendas_acima", "Avisar vendas acima de"],
+                ] as const
+              ).map(([campo, label]) => (
+                <div key={campo} className="space-y-1.5">
+                  <Label>{label}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={campo === "valor_excedente" ? "0.01" : "1"}
+                    placeholder="Sem limite"
+                    defaultValue={p[campo] ?? ""}
+                    onBlur={(e) => {
+                      const nullable =
+                        campo !== "participacoes_incluidas" && campo !== "valor_excedente";
+                      const valor =
+                        e.target.value === "" && nullable ? null : Number(e.target.value);
+                      if (
+                        valor !== null &&
+                        (!Number.isFinite(valor) ||
+                          valor < 0 ||
+                          (campo !== "valor_excedente" && !Number.isInteger(valor)))
+                      ) {
+                        toast.error("Valor inválido.");
+                        return;
+                      }
+                      salvar.mutate({ id: p.id, patch: { [campo]: valor } });
+                    }}
+                  />
+                </div>
+              ))}
             </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{RECURSOS_PLANO.map(r => <label key={r.chave} className="flex items-center justify-between gap-3 text-xs">{r.rotulo}<Switch checked={temRecurso(p.recursos, r.chave)} onCheckedChange={v => salvar.mutate({ id: p.id, patch: { recursos: { ...(p.recursos as Record<string, boolean>), [r.chave]: v } } })} /></label>)}</div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {RECURSOS_PLANO.map((r) => (
+                <label key={r.chave} className="flex items-center justify-between gap-3 text-xs">
+                  {r.rotulo}
+                  <Switch
+                    checked={temRecurso(p.recursos, r.chave)}
+                    onCheckedChange={(v) =>
+                      salvar.mutate({
+                        id: p.id,
+                        patch: {
+                          recursos: { ...(p.recursos as Record<string, boolean>), [r.chave]: v },
+                        },
+                      })
+                    }
+                  />
+                </label>
+              ))}
+            </div>
           </li>
         ))}
       </ul>
@@ -518,38 +592,141 @@ function Cupons() {
 }
 
 function Receita() {
-  const q = useQuery({ queryKey: ["admin", "receita-v2"], queryFn: async () => {
-    const [faturas, custos, assinaturas, historico, planos] = await Promise.all([
-      supabase.from("faturas_plataforma").select("*, empresas(nome)").order("ciclo_inicio", { ascending: false }),
-      supabase.from("custos_meio_pagamento").select("custo"),
-      supabase.from("assinaturas").select("plano_id, mensalidade_override, status"),
-      supabase.from("assinaturas_historico").select("empresa_id, plano_anterior_id, plano_novo_id"),
-      supabase.from("planos").select("id, codigo, mensalidade"),
-    ]);
-    for (const r of [faturas, custos, assinaturas, historico, planos]) if (r.error) throw r.error;
-    return { faturas: faturas.data ?? [], custos: custos.data ?? [], assinaturas: assinaturas.data ?? [], historico: historico.data ?? [], planos: planos.data ?? [] };
-  }});
+  const q = useQuery({
+    queryKey: ["admin", "receita-v2"],
+    queryFn: async () => {
+      const [faturas, custos, assinaturas, historico, planos] = await Promise.all([
+        supabase
+          .from("faturas_plataforma")
+          .select("*, empresas(nome)")
+          .order("ciclo_inicio", { ascending: false }),
+        supabase.from("custos_meio_pagamento").select("custo"),
+        supabase.from("assinaturas").select("plano_id, mensalidade_override, status"),
+        supabase
+          .from("assinaturas_historico")
+          .select("empresa_id, plano_anterior_id, plano_novo_id"),
+        supabase.from("planos").select("id, codigo, mensalidade"),
+      ]);
+      for (const r of [faturas, custos, assinaturas, historico, planos]) if (r.error) throw r.error;
+      return {
+        faturas: faturas.data ?? [],
+        custos: custos.data ?? [],
+        assinaturas: assinaturas.data ?? [],
+        historico: historico.data ?? [],
+        planos: planos.data ?? [],
+      };
+    },
+  });
   if (q.isPending) return <LoadingBloco />;
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
-  const pagas = q.data.faturas.filter(f => f.status === "paga");
-  const receita = pagas.reduce((s,f) => s + Number(f.total),0);
-  const variavel = pagas.reduce((s,f) => s + Number(f.valor_excedente_total),0);
-  const mrr = q.data.assinaturas.filter(a => a.status === "ativa").reduce((s,a) => s + Number(a.mensalidade_override ?? q.data.planos.find(p => p.id === a.plano_id)?.mensalidade ?? 0),0);
-  const free = q.data.planos.find(p => p.codigo === "free")?.id;
-  const convertidas = new Set(q.data.historico.filter(h => h.plano_anterior_id === free && h.plano_novo_id && h.plano_novo_id !== free).map(h => h.empresa_id)).size;
-  return <div className="space-y-5"><dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{[["MRR contratado",moeda(mrr)],["SaaS recebido",moeda(receita)],["Excedentes brutos recebidos",moeda(variavel)],["Conversões Free → pago",String(convertidas)]].map(([label,v]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-2 text-xl font-semibold">{v}</dd></div>)}</dl><p className="text-sm text-muted-foreground">Custos do gateway: {moeda(q.data.custos.reduce((s,c) => s + Number(c.custo),0))} · Recursos de trabalhadores não entram na receita SaaS.</p><ul className="divide-y divide-border">{q.data.faturas.map(f => <li key={f.id} className="flex flex-wrap justify-between gap-3 py-3 text-sm"><span>{f.empresas?.nome ?? "—"} · {f.plano_nome}</span><span>{moeda(f.total)} · {f.participacoes_usadas} participações · {f.status}</span></li>)}</ul><TaxasPagamento /></div>;
+  const pagas = q.data.faturas.filter((f) => f.status === "paga");
+  const receita = pagas.reduce((s, f) => s + Number(f.total), 0);
+  const variavel = pagas.reduce((s, f) => s + Number(f.valor_excedente_total), 0);
+  const mrr = q.data.assinaturas
+    .filter((a) => a.status === "ativa")
+    .reduce(
+      (s, a) =>
+        s +
+        Number(
+          a.mensalidade_override ??
+            q.data.planos.find((p) => p.id === a.plano_id)?.mensalidade ??
+            0,
+        ),
+      0,
+    );
+  const free = q.data.planos.find((p) => p.codigo === "free")?.id;
+  const convertidas = new Set(
+    q.data.historico
+      .filter((h) => h.plano_anterior_id === free && h.plano_novo_id && h.plano_novo_id !== free)
+      .map((h) => h.empresa_id),
+  ).size;
+  return (
+    <div className="space-y-5">
+      <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ["MRR contratado", moeda(mrr)],
+          ["SaaS recebido", moeda(receita)],
+          ["Excedentes brutos recebidos", moeda(variavel)],
+          ["Conversões Free → pago", String(convertidas)],
+        ].map(([label, v]) => (
+          <div key={label}>
+            <dt className="text-xs text-muted-foreground">{label}</dt>
+            <dd className="mt-2 text-xl font-semibold">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="text-sm text-muted-foreground">
+        Custos do gateway: {moeda(q.data.custos.reduce((s, c) => s + Number(c.custo), 0))} ·
+        Recursos de trabalhadores não entram na receita SaaS.
+      </p>
+      <ul className="divide-y divide-border">
+        {q.data.faturas.map((f) => (
+          <li key={f.id} className="flex flex-wrap justify-between gap-3 py-3 text-sm">
+            <span>
+              {f.empresas?.nome ?? "—"} · {f.plano_nome}
+            </span>
+            <span>
+              {moeda(f.total)} · {f.participacoes_usadas} participações · {f.status}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <TaxasPagamento />
+    </div>
+  );
 }
 function TaxasPagamento() {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ["admin", "taxas-meio"], queryFn: async () => { const r = await supabase.from("taxas_meio_pagamento").select("*").order("rotulo"); if (r.error) throw r.error; return r.data; } });
-  const salvar = useMutation({ mutationFn: async ({ id, taxa }: {id: string; taxa: number}) => { if (!Number.isFinite(taxa) || taxa < 0 || taxa >= 1) throw new Error("Taxa inválida."); const r = await supabase.from("taxas_meio_pagamento").update({taxa}).eq("id",id); if (r.error) throw r.error; }, onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin", "taxas-meio"] }); toast.success("Custo atualizado."); }, onError: (e: Error) => toast.error(e.message) });
-  return <section className="border-t border-border pt-5"><h2 className="font-semibold">Custos do meio de pagamento</h2><div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{q.data?.map(t => <div key={t.id}><Label>{t.rotulo} (%)</Label><Input type="number" min={0} max={99.99} step="0.01" defaultValue={(t.taxa*100).toFixed(2)} onBlur={e => salvar.mutate({id:t.id,taxa:Number(e.target.value)/100})} /></div>)}</div></section>;
+  const q = useQuery({
+    queryKey: ["admin", "taxas-meio"],
+    queryFn: async () => {
+      const r = await supabase.from("taxas_meio_pagamento").select("*").order("rotulo");
+      if (r.error) throw r.error;
+      return r.data;
+    },
+  });
+  const salvar = useMutation({
+    mutationFn: async ({ id, taxa }: { id: string; taxa: number }) => {
+      if (!Number.isFinite(taxa) || taxa < 0 || taxa >= 1) throw new Error("Taxa inválida.");
+      const r = await supabase.from("taxas_meio_pagamento").update({ taxa }).eq("id", id);
+      if (r.error) throw r.error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "taxas-meio"] });
+      toast.success("Custo atualizado.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <section className="border-t border-border pt-5">
+      <h2 className="font-semibold">Custos do meio de pagamento</h2>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {q.data?.map((t) => (
+          <div key={t.id}>
+            <Label>{t.rotulo} (%)</Label>
+            <Input
+              type="number"
+              min={0}
+              max={99.99}
+              step="0.01"
+              defaultValue={(t.taxa * 100).toFixed(2)}
+              onBlur={(e) => salvar.mutate({ id: t.id, taxa: Number(e.target.value) / 100 })}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function Equipe() {
   const queryClient = useQueryClient();
   const ativarFn = useServerFn(alterarAtivacaoSuporte);
-  const ativar = useMutation({mutationFn: (data: {usuarioId:string;ativo:boolean}) => ativarFn({data}), onSuccess:()=>queryClient.invalidateQueries({queryKey:["admin"]}), onError:(e:Error)=>toast.error(e.message)});
+  const ativar = useMutation({
+    mutationFn: (data: { usuarioId: string; ativo: boolean }) => ativarFn({ data }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
   const [userId, setUserId] = useState("");
   const [papel, setPapel] = useState("suporte");
 
@@ -562,7 +739,10 @@ function Equipe() {
       ]);
       if (membros.error) throw membros.error;
       if (usuarios.error) throw usuarios.error;
-      return membros.data.map((m) => ({ ...m, usuarios: usuarios.data.find((u) => u.id === m.user_id) ?? null }));
+      return membros.data.map((m) => ({
+        ...m,
+        usuarios: usuarios.data.find((u) => u.id === m.user_id) ?? null,
+      }));
     },
   });
 
@@ -636,7 +816,16 @@ function Equipe() {
                 {(m.usuarios as { nome?: string; email?: string } | null)?.email ?? m.user_id} ·{" "}
                 {m.papel}
               </span>
-              {m.papel === "suporte" ? <Button size="sm" variant="outline" disabled={ativar.isPending} onClick={()=>ativar.mutate({usuarioId:m.user_id,ativo:!m.usuarios?.ativo})}>{m.usuarios?.ativo ? "Desativar" : "Ativar"}</Button> : null}
+              {m.papel === "suporte" ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={ativar.isPending}
+                  onClick={() => ativar.mutate({ usuarioId: m.user_id, ativo: !m.usuarios?.ativo })}
+                >
+                  {m.usuarios?.ativo ? "Desativar" : "Ativar"}
+                </Button>
+              ) : null}
               <Button size="sm" variant="ghost" onClick={() => remover.mutate(m.id)}>
                 Remover
               </Button>

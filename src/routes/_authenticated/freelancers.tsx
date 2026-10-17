@@ -18,12 +18,24 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useSessao } from "@/hooks/use-sessao";
 import { supabase } from "@/integrations/supabase/client";
 import { AVISO_CLT } from "@/lib/cobranca-v2";
-import { formatarCpf, ROTULO_TIPO_VINCULO, soDigitos, type Freelancer, type TipoVinculo } from "@/lib/dominio";
+import {
+  formatarCpf,
+  ROTULO_TIPO_VINCULO,
+  soDigitos,
+  type Freelancer,
+  type TipoVinculo,
+} from "@/lib/dominio";
 
 export const Route = createFileRoute("/_authenticated/freelancers")({
   head: () => ({
@@ -90,9 +102,7 @@ function FormFreelancer({
       if (!empresaId) throw new Error("Agência não identificada.");
       const { error } = freelancer
         ? await supabase.from("freelancers").update(payload).eq("id", freelancer.id)
-        : await supabase
-            .from("freelancers")
-            .insert({ ...payload, empresa_id: empresaId });
+        : await supabase.from("freelancers").insert({ ...payload, empresa_id: empresaId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -119,17 +129,28 @@ function FormFreelancer({
         <div className="space-y-1.5">
           <Label>Tipo de vínculo</Label>
           <Select value={tipoVinculo} onValueChange={(v) => setTipoVinculo(v as TipoVinculo)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               {(Object.keys(ROTULO_TIPO_VINCULO) as TipoVinculo[]).map((tipo) => (
-                <SelectItem key={tipo} value={tipo}>{ROTULO_TIPO_VINCULO[tipo]}</SelectItem>
+                <SelectItem key={tipo} value={tipo}>
+                  {ROTULO_TIPO_VINCULO[tipo]}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="f-salario">Salário mensal (CLT)</Label>
-          <Input id="f-salario" inputMode="decimal" disabled={tipoVinculo !== "clt"} value={tipoVinculo === "clt" ? salarioMensal : ""} onChange={(e) => setSalarioMensal(e.target.value)} placeholder={tipoVinculo === "clt" ? "0,00" : "Não se aplica"} />
+          <Input
+            id="f-salario"
+            inputMode="decimal"
+            disabled={tipoVinculo !== "clt"}
+            value={tipoVinculo === "clt" ? salarioMensal : ""}
+            onChange={(e) => setSalarioMensal(e.target.value)}
+            placeholder={tipoVinculo === "clt" ? "0,00" : "Não se aplica"}
+          />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -145,11 +166,7 @@ function FormFreelancer({
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="f-tel">Telefone</Label>
-          <Input
-            id="f-tel"
-            value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
-          />
+          <Input id="f-tel" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
         </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -226,8 +243,12 @@ function Freelancers() {
     setImportando(true);
     try {
       if (!empresaId) throw new Error("Organização não encontrada.");
-      const recurso = await supabase.rpc("recurso_habilitado", { _empresa_id: empresaId, _recurso: "importacao_excel" });
-      if (recurso.error || !recurso.data) throw new Error("Importação Excel indisponível no seu plano. Faça upgrade em Plano e uso.");
+      const recurso = await supabase.rpc("recurso_habilitado", {
+        _empresa_id: empresaId,
+        _recurso: "importacao_excel",
+      });
+      if (recurso.error || !recurso.data)
+        throw new Error("Importação Excel indisponível no seu plano. Faça upgrade em Plano e uso.");
       const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
       const primeiraAba = workbook.Sheets[workbook.SheetNames[0] ?? ""];
       if (!primeiraAba) throw new Error("A planilha não possui uma aba válida.");
@@ -238,10 +259,15 @@ function Freelancers() {
 
       const registros = linhas.map((linha, index) => {
         const tipo = String(linha["tipo_vinculo"] || "frela").toLowerCase();
-        const salarioInformado = linha["salario_mensal"] === "" ? null : Number(linha["salario_mensal"]);
+        const salarioInformado =
+          linha["salario_mensal"] === "" ? null : Number(linha["salario_mensal"]);
         const salario = tipo === "clt" ? salarioInformado : null;
         const cpf = soDigitos(String(linha["cpf"]));
-        if (!String(linha["nome"]).trim() || cpf.length !== 11 || !String(linha["chave_pix"]).trim()) {
+        if (
+          !String(linha["nome"]).trim() ||
+          cpf.length !== 11 ||
+          !String(linha["chave_pix"]).trim()
+        ) {
           throw new Error(`Linha ${index + 2}: nome, CPF e chave Pix são obrigatórios.`);
         }
         if (tipo !== "frela" && tipo !== "clt") {
@@ -277,10 +303,7 @@ function Freelancers() {
     queryKey: ["freelancers", empresaId],
     enabled: Boolean(empresaId),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("freelancers")
-        .select("*")
-        .order("nome");
+      const { data, error } = await supabase.from("freelancers").select("*").order("nome");
       if (error) throw error;
       return data;
     },
@@ -369,7 +392,12 @@ function Freelancers() {
                   ) : null}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {[ROTULO_TIPO_VINCULO[f.tipo_vinculo === "clt" ? "clt" : "frela"], f.funcao, formatarCpf(f.cpf), f.chave_pix]
+                  {[
+                    ROTULO_TIPO_VINCULO[f.tipo_vinculo === "clt" ? "clt" : "frela"],
+                    f.funcao,
+                    formatarCpf(f.cpf),
+                    f.chave_pix,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>

@@ -177,8 +177,7 @@ function Eventos() {
   const lista = (q.data ?? []).filter(
     (e) =>
       (filtro === "todos" || e.status === filtro) &&
-      (e.nome.toLowerCase().includes(termo) ||
-        (e.local ?? "").toLowerCase().includes(termo)),
+      (e.nome.toLowerCase().includes(termo) || (e.local ?? "").toLowerCase().includes(termo)),
   );
 
   return (

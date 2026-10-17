@@ -58,11 +58,9 @@ async function limitarTentativas(token: string, cpf: string | null, acao: string
   return { registrar };
 }
 
-function validarValidadeQr(evento: {
-  data_fim: string | null;
-  qr_code_expira_em: string | null;
-}) {
-  const expiraEm = evento.qr_code_expira_em ??
+function validarValidadeQr(evento: { data_fim: string | null; qr_code_expira_em: string | null }) {
+  const expiraEm =
+    evento.qr_code_expira_em ??
     (evento.data_fim
       ? new Date(new Date(evento.data_fim).getTime() + 12 * 60 * 60_000).toISOString()
       : null);
@@ -92,7 +90,9 @@ export const obterContextoPonto = createServerFn({ method: "GET" })
       .eq("empresa_id", evento.empresa_id)
       .maybeSingle();
 
-    const { data: plano } = await supabaseAdmin.rpc("plano_da_empresa", { _empresa_id: evento.empresa_id });
+    const { data: plano } = await supabaseAdmin.rpc("plano_da_empresa", {
+      _empresa_id: evento.empresa_id,
+    });
     return {
       pontoBasico: plano?.codigo === "free",
       evento: {
@@ -142,8 +142,7 @@ async function localizarEscala(token: string, cpf: string) {
     .neq("status", "substituido")
     .maybeSingle();
   if (!escala) throw new Error("Você não está escalado neste evento.");
-  if (escala.status === "recusado")
-    throw new Error("Sua participação neste evento foi recusada.");
+  if (escala.status === "recusado") throw new Error("Sua participação neste evento foi recusada.");
 
   return { supabaseAdmin, evento, freelancer, escala };
 }
@@ -201,10 +200,7 @@ export const registrarPonto = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => registrarSchema.parse(input))
   .handler(async ({ data }) => {
     const tentativa = await limitarTentativas(data.token, data.cpf, "registro");
-    const { supabaseAdmin, evento, escala } = await localizarEscala(
-      data.token,
-      data.cpf,
-    );
+    const { supabaseAdmin, evento, escala } = await localizarEscala(data.token, data.cpf);
     if (escala.id !== data.escalaId) throw new Error("Escala inválida.");
 
     const { data: config } = await supabaseAdmin
@@ -238,7 +234,9 @@ export const registrarPonto = createServerFn({ method: "POST" })
       .eq("escala_id", escala.id)
       .neq("status", "recusado")
       .order("registrado_em");
-    const { data: plano, error: erroPlano } = await supabaseAdmin.rpc("plano_da_empresa", { _empresa_id: evento.empresa_id });
+    const { data: plano, error: erroPlano } = await supabaseAdmin.rpc("plano_da_empresa", {
+      _empresa_id: evento.empresa_id,
+    });
     if (erroPlano) throw new Error("Não foi possível verificar o plano.");
     const sequencia = plano?.codigo === "free" ? ["entrada", "saida"] : SEQUENCIA;
     const esperado = sequencia[(existentes ?? []).length];
@@ -249,23 +247,30 @@ export const registrarPonto = createServerFn({ method: "POST" })
 
     const agora = new Date();
     const foraHorario = Boolean(evento.data_fim && agora > new Date(evento.data_fim));
-    const retencaoDias = Math.min(config?.selfie_retencao_dias ?? 90, plano?.retencao_evidencias_dias ?? 365);
+    const retencaoDias = Math.min(
+      config?.selfie_retencao_dias ?? 90,
+      plano?.retencao_evidencias_dias ?? 365,
+    );
     const selfieExpiraEm = data.fotoBase64
       ? new Date(agora.getTime() + retencaoDias * 24 * 60 * 60_000).toISOString()
       : null;
-    const { data: ponto, error } = await supabaseAdmin.from("pontos").insert({
-      escala_id: escala.id,
-      tipo: data.tipo,
-      metodo: data.fotoBase64 ? "selfie" : "qrcode",
-      registrado_em: agora.toISOString(),
-      foto_url: fotoUrl,
-      gps_lat: data.lat ?? null,
-      gps_lng: data.lng ?? null,
-      status: "pendente",
-      fora_horario: foraHorario,
-      selfie_consentimento_aceito_em: data.fotoBase64 ? agora.toISOString() : null,
-      selfie_expira_em: selfieExpiraEm,
-    }).select("id").single();
+    const { data: ponto, error } = await supabaseAdmin
+      .from("pontos")
+      .insert({
+        escala_id: escala.id,
+        tipo: data.tipo,
+        metodo: data.fotoBase64 ? "selfie" : "qrcode",
+        registrado_em: agora.toISOString(),
+        foto_url: fotoUrl,
+        gps_lat: data.lat ?? null,
+        gps_lng: data.lng ?? null,
+        status: "pendente",
+        fora_horario: foraHorario,
+        selfie_consentimento_aceito_em: data.fotoBase64 ? agora.toISOString() : null,
+        selfie_expira_em: selfieExpiraEm,
+      })
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
 
     await supabaseAdmin.from("auditoria_ponto_publico").insert({
@@ -274,7 +279,11 @@ export const registrarPonto = createServerFn({ method: "POST" })
       ponto_id: ponto.id,
       acao: "ponto_registrado",
       resultado: "sucesso",
-      detalhes: { tipo: data.tipo, fora_horario: foraHorario, com_selfie: Boolean(data.fotoBase64) },
+      detalhes: {
+        tipo: data.tipo,
+        fora_horario: foraHorario,
+        com_selfie: Boolean(data.fotoBase64),
+      },
     });
     await tentativa.registrar(true);
 

@@ -12,11 +12,7 @@ import { gerarChaveWebhookAsaas, type EventoAsaasWebhook } from "@/lib/webhook-i
 
 type EventoAsaas = EventoAsaasWebhook;
 
-const PAGAS = new Set([
-  "PAYMENT_RECEIVED",
-  "PAYMENT_CONFIRMED",
-  "PAYMENT_RECEIVED_IN_CASH",
-]);
+const PAGAS = new Set(["PAYMENT_RECEIVED", "PAYMENT_CONFIRMED", "PAYMENT_RECEIVED_IN_CASH"]);
 
 export const Route = createFileRoute("/api/public/webhooks/asaas")({
   server: {
@@ -39,6 +35,7 @@ export const Route = createFileRoute("/api/public/webhooks/asaas")({
         const evento = corpo.event ?? "";
         const chaveIdempotencia = gerarChaveWebhookAsaas(corpo);
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: webhookJaProcessado } = await (supabaseAdmin as any)
           .from("webhook_eventos")
           .select("id")
@@ -144,6 +141,7 @@ export const Route = createFileRoute("/api/public/webhooks/asaas")({
           }
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error: erroWebhookLog } = await (supabaseAdmin as any)
           .from("webhook_eventos")
           .insert({

@@ -312,10 +312,9 @@ const MATRIZ: Record<PapelUsuario, Capacidade[]> = {
     "eventos.gerenciar",
     "operacao.supervisionar",
     "fechamento.aprovar",
-    "relatorios.ver",
   ],
   financeiro: ["financeiro.gerenciar", "relatorios.ver"],
-  supervisor: ["operacao.supervisionar", "relatorios.ver"],
+  supervisor: ["operacao.supervisionar"],
 };
 
 export function podeCom(papeis: PapelUsuario[], capacidade: Capacidade): boolean {

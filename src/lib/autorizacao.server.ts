@@ -75,7 +75,8 @@ export function requireResourceAccess(
 ): ContextoResolvido {
   const resolved = context?.contexto ?? null;
   if (!empresaId) {
-    if (resolved?.papeisPlataforma.includes("admin_master") && options?.allowPlatform) return resolved;
+    if (resolved?.papeisPlataforma.includes("admin_master") && options?.allowPlatform)
+      return resolved;
     throw new Error("Recurso sem organização vinculada.");
   }
 

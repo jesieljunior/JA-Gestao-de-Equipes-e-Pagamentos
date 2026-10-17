@@ -10,8 +10,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireOrganizationContext } from "@/lib/autorizacao.server";
 
-
-
 const cobrancaSchema = z.object({
   clienteId: z.string().uuid(),
   eventoId: z.string().uuid().nullable().optional(),
@@ -283,7 +281,8 @@ export const agendarPagamentos = createServerFn({ method: "POST" })
     const { exigirRecursoPlano } = await import("./plano.server");
     if (!organizacao.empresaId) throw new Error("Agência não encontrada.");
     await exigirRecursoPlano(context.supabase, organizacao.empresaId, "agendamento_pix");
-    if (data.pagamentoIds.length > 1) await exigirRecursoPlano(context.supabase, organizacao.empresaId, "pix_massa");
+    if (data.pagamentoIds.length > 1)
+      await exigirRecursoPlano(context.supabase, organizacao.empresaId, "pix_massa");
     const quando = new Date(data.dataAgendada);
     if (Number.isNaN(quando.getTime()) || quando <= new Date()) {
       throw new Error("Escolha uma data futura para os pagamentos.");
@@ -322,7 +321,8 @@ export const reabrirPagamentoFalho = createServerFn({ method: "POST" })
       .eq("id", data.pagamentoId)
       .maybeSingle();
     if (!atual || atual.status !== "falhou") throw new Error("Pagamento não está em falha.");
-    if (Number(atual.valor) < 0.01) throw new Error("Corrija o fechamento antes de tentar novamente.");
+    if (Number(atual.valor) < 0.01)
+      throw new Error("Corrija o fechamento antes de tentar novamente.");
 
     const { error } = await context.supabase
       .from("pagamentos")

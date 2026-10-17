@@ -44,10 +44,7 @@ function Operacao() {
   });
 
   return (
-    <AppShell
-      titulo="Operação"
-      descricao="Eventos prontos ou acontecendo agora"
-    >
+    <AppShell titulo="Operação" descricao="Eventos prontos ou acontecendo agora">
       {eventos.isPending ? (
         <LoadingBloco />
       ) : eventos.isError ? (

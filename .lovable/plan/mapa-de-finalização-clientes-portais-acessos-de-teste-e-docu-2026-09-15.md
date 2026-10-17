@@ -15,6 +15,7 @@ A organização reutiliza o mesmo cliente em vários eventos. Recursos para paga
 ## Diagnóstico atual e divergências
 
 ### Já existe
+
 - Login por e-mail/senha e Google, organização, clientes, eventos, equipes, escalas, ponto, fechamento e pagamentos.
 - Três superfícies: portal da organização, suporte e administração master.
 - Isolamento básico por organização no banco.
@@ -22,6 +23,7 @@ A organização reutiliza o mesmo cliente em vários eventos. Recursos para paga
 - Planos, testes gratuitos, cupons e preços controlados pela administração master.
 
 ### Lacunas críticas
+
 - O cadastro de cliente mostra apenas nome e observações. CPF/CNPJ, e-mail e telefone existem parcialmente no banco, mas não estão no formulário; isso já impede cobranças.
 - Não há endereço, razão social, nome fantasia, inscrição municipal/estadual, responsável, situação cadastral nem preferências fiscais estruturadas.
 - A matriz de permissões da organização existe, mas não protege todas as telas e ações. Hoje um perfil operacional pode alcançar ações financeiras.
@@ -34,6 +36,7 @@ A organização reutiliza o mesmo cliente em vários eventos. Recursos para paga
 ## Escopo de implementação
 
 ### 1. Cadastro completo de clientes
+
 Criar cadastro em seções, válido para pessoa jurídica e pessoa física:
 
 - **Identificação:** tipo de pessoa, CPF/CNPJ, razão social/nome legal, nome fantasia/nome de exibição e situação ativa.
@@ -47,6 +50,7 @@ Criar cadastro em seções, válido para pessoa jurídica e pessoa física:
 - Criar lista com busca por nome, documento, e-mail e situação; detalhe com eventos e cobranças relacionados.
 
 ### 2. Funding separado de receita
+
 Substituir a ideia ambígua de “saldo/aporte” por uma estrutura neutra:
 
 - **Funding:** recurso disponibilizado pela organização para uma finalidade/lote de pagamentos.
@@ -59,6 +63,7 @@ Substituir a ideia ambígua de “saldo/aporte” por uma estrutura neutra:
 - Registrar idempotência, conciliação, estornos, sobras/devoluções e trilha de auditoria.
 
 ### 3. Documentos fiscais sem inventar tributação
+
 Implementar somente registro e anexação, sem emissão ou cálculo automático:
 
 - Entidade neutra **FiscalDocument**, ligada separadamente à organização, cliente, prestador, evento, pagamento ou taxa da plataforma.
@@ -72,22 +77,26 @@ Implementar somente registro e anexação, sem emissão ou cálculo automático:
 ### 4. Três portais e autorização real
 
 **Portal da organização**
+
 - Clientes, eventos, prestadores, operação, fechamentos, funding, lotes, pagamentos e documentos próprios.
 - Perfis internos: administrador, coordenador, financeiro e supervisor.
 - Administração gerencia equipe e configurações; financeiro gerencia funding/pagamentos; coordenador gerencia cadastros/eventos; supervisor opera campo.
 
 **Portal de suporte**
+
 - Busca e consulta entre organizações, conferência/reprocessamento autorizado e visualização de documentos quando necessário.
 - Sem alteração de planos, preços ou papéis master.
 - Toda ação gera auditoria com usuário, organização, ação, alvo, data e resultado.
 
 **Portal master**
+
 - Organizações, planos, trials, cupons, cobranças da plataforma, equipe de suporte e auditoria.
 - Não mistura receita da plataforma com funding destinado aos prestadores.
 
 A proteção será aplicada na navegação, em funções de servidor e nas políticas do banco. Ocultar botão não será considerado segurança.
 
 ### 5. Três acessos de teste
+
 - Criar três contas separadas: **organização**, **suporte** e **admin master**.
 - Provisionar por fluxo administrativo seguro, com senha temporária e troca obrigatória; nenhuma senha ficará no código, migração ou chat.
 - Popular dados demonstrativos claramente marcados como teste e isolados de dados reais.
@@ -95,6 +104,7 @@ A proteção será aplicada na navegação, em funções de servidor e nas polí
 - Exibir um guia interno com a URL e o papel de cada acesso, sem revelar credenciais.
 
 ### 6. Neutralização do nome provisório
+
 - Novas tabelas, tipos, funções e componentes usarão nomes neutros (`Client`, `Organization`, `ServiceProvider`, `Funding`, `PaymentBatch`, `PlatformCharge`, `FiscalDocument`).
 - Centralizar o nome exibido do produto em uma configuração única.
 - Remover a marca fixa de regras e descrições financeiras; manter compatibilidade temporária com nomes antigos do banco até migração segura.

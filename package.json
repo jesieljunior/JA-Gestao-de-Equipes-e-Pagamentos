@@ -4,10 +4,11 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "vite dev --host 0.0.0.0 --port 3000",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
+    "test": "vitest run",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

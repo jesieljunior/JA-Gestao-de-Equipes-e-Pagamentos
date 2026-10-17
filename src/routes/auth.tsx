@@ -12,8 +12,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/auth")({
   ssr: false,
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (data.user) throw redirect({ to: "/painel" });
+    try {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) throw redirect({ to: "/painel" });
+    } catch (e) {
+      if (e && typeof e === "object" && "to" in e) throw e;
+    }
   },
   head: () => ({
     meta: [
@@ -101,28 +105,27 @@ function Auth() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-10">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 text-center">
-          <p className="text-lg font-semibold tracking-tight">PayCrew</p>
-          <p className="text-sm text-muted-foreground">
+    <div className="flex min-h-screen flex-col items-center justify-between bg-muted/30 px-4 py-8">
+      <div className="w-full max-w-sm my-auto">
+        <div className="mb-6 text-center space-y-1">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary mb-2">
+            <span>SaaS por Swali</span>
+          </div>
+          <p className="text-2xl font-bold tracking-tight text-foreground">PayCrew</p>
+          <p className="text-xs text-muted-foreground">
             Operação e pagamento de equipes de eventos
           </p>
         </div>
 
-        <div className="rounded-md border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
           {aguardandoConfirmacao ? (
             <div className="space-y-3 text-center">
               <p className="text-sm font-medium">Confirme seu e-mail</p>
               <p className="text-sm text-muted-foreground">
-                Enviamos um link de confirmação para <strong>{email}</strong>.
-                Clique nele para ativar o acesso.
+                Enviamos um link de confirmação para <strong>{email}</strong>. Clique nele para
+                ativar o acesso.
               </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setAguardandoConfirmacao(false)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setAguardandoConfirmacao(false)}>
                 Voltar
               </Button>
             </div>
@@ -224,6 +227,20 @@ function Auth() {
           ) : null}
         </div>
       </div>
+
+      <footer className="mt-8 text-center text-xs text-muted-foreground">
+        <p>
+          PayCrew é um software como serviço da{" "}
+          <a
+            href="https://www.swali.com.br/"
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-foreground underline decoration-primary/50 hover:text-primary transition-colors"
+          >
+            Swali (swali.com.br)
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }

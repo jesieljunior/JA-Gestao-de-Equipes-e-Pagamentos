@@ -68,12 +68,7 @@ function Onboarding() {
         <div className="mt-5 space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="nome">Nome da agência</Label>
-            <Input
-              id="nome"
-              required
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-            />
+            <Input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="cnpj">CNPJ</Label>

@@ -8,9 +8,7 @@ export type AmbienteAsaas = "sandbox" | "producao";
 
 function baseUrl(): string {
   const amb = (process.env["ASAAS_ENVIRONMENT"] ?? "sandbox") as AmbienteAsaas;
-  return amb === "producao"
-    ? "https://api.asaas.com/v3"
-    : "https://api-sandbox.asaas.com/v3";
+  return amb === "producao" ? "https://api.asaas.com/v3" : "https://api-sandbox.asaas.com/v3";
 }
 
 export class AsaasError extends Error {
@@ -41,12 +39,28 @@ async function chamar<T>(
   });
 
   const texto = await resposta.text();
-  const corpo: unknown = texto ? JSON.parse(texto) : {};
+  let corpo: unknown = {};
+  try {
+    corpo = texto ? JSON.parse(texto) : {};
+  } catch {
+    corpo = { raw: texto };
+  }
 
   if (!resposta.ok) {
-    const erros = (corpo as { errors?: { description?: string }[] }).errors;
-    const descricao = erros?.map((e) => e.description).filter(Boolean).join("; ");
-    throw new AsaasError(descricao || `Asaas respondeu ${resposta.status}`, resposta.status);
+    const asaasResponse = corpo as {
+      errors?: { description?: string }[];
+      message?: string;
+      error?: string;
+    };
+    const descricao =
+      asaasResponse.errors
+        ?.map((e) => e.description)
+        .filter(Boolean)
+        .join("; ") ||
+      asaasResponse.message ||
+      asaasResponse.error ||
+      (texto ? `Asaas erro: ${texto.slice(0, 150)}` : "");
+    throw new AsaasError(descricao || `Asaas respondeu status ${resposta.status}`, resposta.status);
   }
   return corpo as T;
 }
@@ -130,11 +144,8 @@ export async function obterPixCopiaCola(cobrancaId: string): Promise<string | nu
   return (await obterPixQrCode(cobrancaId)).payload;
 }
 
-
 export async function obterCobrancaAsaas(cobrancaId: string) {
-  return chamar<{ id: string; status: string; paymentDate?: string }>(
-    `/payments/${cobrancaId}`,
-  );
+  return chamar<{ id: string; status: string; paymentDate?: string }>(`/payments/${cobrancaId}`);
 }
 
 /** Tipo da chave Pix inferido pelo formato, como o Asaas espera. */
@@ -144,8 +155,39 @@ export function tipoChavePix(chave: string): "CPF" | "CNPJ" | "EMAIL" | "PHONE" 
   if (digitos.length === 11 && digitos === chave.replace(/\D+/g, "") && !chave.startsWith("+"))
     return "CPF";
   if (digitos.length === 14) return "CNPJ";
-  if (digitos.length === 12 || digitos.length === 13 || chave.startsWith("+")) return "PHONE";
+  if (
+    digitos.length === 10 ||
+    digitos.length === 11 ||
+    digitos.length === 12 ||
+    digitos.length === 13 ||
+    chave.startsWith("+")
+  )
+    return "PHONE";
   return "EVP";
+}
+
+export function normalizarChavePix(chave: string): {
+  chave: string;
+  tipo: "CPF" | "CNPJ" | "EMAIL" | "PHONE" | "EVP";
+} {
+  const chaveLimpa = chave.trim();
+  const tipo = tipoChavePix(chaveLimpa);
+  let chaveFormatada = chaveLimpa;
+
+  if (tipo === "CPF" || tipo === "CNPJ") {
+    chaveFormatada = chaveLimpa.replace(/\D+/g, "");
+  } else if (tipo === "PHONE") {
+    const digitos = chaveLimpa.replace(/\D+/g, "");
+    chaveFormatada = chaveLimpa.startsWith("+")
+      ? chaveLimpa
+      : digitos.startsWith("55")
+        ? `+${digitos}`
+        : `+55${digitos}`;
+  } else if (tipo === "EMAIL") {
+    chaveFormatada = chaveLimpa.toLowerCase();
+  }
+
+  return { chave: chaveFormatada, tipo };
 }
 
 export type TransferenciaAsaas = { id: string; status: string; failReason?: string };
@@ -157,16 +199,26 @@ export async function transferirPix(dados: {
   referenciaExterna: string;
   chaveIdempotencia: string;
 }): Promise<TransferenciaAsaas> {
-  return chamar<TransferenciaAsaas>("/transfers", {
+  const { chave: pixAddressKey, tipo: pixAddressKeyType } = normalizarChavePix(dados.chavePix);
+  const transferencia = await chamar<TransferenciaAsaas>("/transfers", {
     method: "POST",
     body: {
       value: dados.valor,
       operationType: "PIX",
-      pixAddressKey: dados.chavePix,
-      pixAddressKeyType: tipoChavePix(dados.chavePix),
+      pixAddressKey,
+      pixAddressKeyType,
       description: dados.descricao,
       externalReference: dados.referenciaExterna,
       idempotencyKey: dados.chaveIdempotencia,
     },
   });
+
+  if (transferencia.status === "FAILED" || transferencia.failReason) {
+    throw new AsaasError(
+      `Pix recusado pelo parceiro: ${transferencia.failReason || "Falha na transferência"}`,
+      400,
+    );
+  }
+
+  return transferencia;
 }

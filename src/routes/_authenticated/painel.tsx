@@ -24,8 +24,7 @@ export const Route = createFileRoute("/_authenticated/painel")({
       { property: "og:title", content: "Painel da agência — PayCrew" },
       {
         property: "og:description",
-        content:
-          "Visão geral da operação: eventos, pontos, fechamentos e pagamentos pendentes.",
+        content: "Visão geral da operação: eventos, pontos, fechamentos e pagamentos pendentes.",
       },
     ],
   }),
@@ -34,48 +33,57 @@ export const Route = createFileRoute("/_authenticated/painel")({
 
 async function carregar(empresaId: string) {
   const emTresDias = new Date(Date.now() + 3 * 24 * 60 * 60_000).toISOString();
-  const [eventos, pontos, foraHorario, selfiesExpirando, fechamentos, pagamentos] = await Promise.all([
-    supabase
-      .from("eventos")
-      .select("id, nome, local, data_inicio, status, qr_code_expira_em")
-      .eq("empresa_id", empresaId)
-      .not("status", "in", "(concluido,arquivado,cancelado)")
-      .order("data_inicio", { ascending: true })
-      .limit(8),
-    supabase
-      .from("pontos")
-      .select("id, escalas!inner(equipes!inner(eventos!inner(empresa_id)))", {
-        count: "exact",
-        head: true,
-      })
-      .eq("status", "pendente")
-      .eq("escalas.equipes.eventos.empresa_id", empresaId),
-    supabase
-      .from("pontos")
-      .select("id, escalas!inner(equipes!inner(eventos!inner(empresa_id)))", { count: "exact", head: true })
-      .eq("status", "pendente")
-      .eq("fora_horario", true)
-      .eq("escalas.equipes.eventos.empresa_id", empresaId),
-    supabase
-      .from("pontos")
-      .select("id, escalas!inner(equipes!inner(eventos!inner(empresa_id)))", { count: "exact", head: true })
-      .not("foto_url", "is", null)
-      .lte("selfie_expira_em", emTresDias)
-      .gte("selfie_expira_em", new Date().toISOString())
-      .eq("escalas.equipes.eventos.empresa_id", empresaId),
-    supabase
-      .from("fechamentos")
-      .select("id, escalas!inner(equipes!inner(eventos!inner(empresa_id)))", {
-        count: "exact",
-        head: true,
-      })
-      .eq("escalas.equipes.eventos.empresa_id", empresaId)
-      .eq("status", "pendente_aprovacao"),
-    supabase
-      .from("pagamentos")
-      .select("valor, status, fechamentos!inner(escalas!inner(equipes!inner(eventos!inner(empresa_id))))")
-      .eq("fechamentos.escalas.equipes.eventos.empresa_id", empresaId),
-  ]);
+  const [eventos, pontos, foraHorario, selfiesExpirando, fechamentos, pagamentos] =
+    await Promise.all([
+      supabase
+        .from("eventos")
+        .select("id, nome, local, data_inicio, status, qr_code_expira_em")
+        .eq("empresa_id", empresaId)
+        .not("status", "in", "(concluido,arquivado,cancelado)")
+        .order("data_inicio", { ascending: true })
+        .limit(8),
+      supabase
+        .from("pontos")
+        .select("id, escalas!inner(equipes!inner(eventos!inner(empresa_id)))", {
+          count: "exact",
+          head: true,
+        })
+        .eq("status", "pendente")
+        .eq("escalas.equipes.eventos.empresa_id", empresaId),
+      supabase
+        .from("pontos")
+        .select("id, escalas!inner(equipes!inner(eventos!inner(empresa_id)))", {
+          count: "exact",
+          head: true,
+        })
+        .eq("status", "pendente")
+        .eq("fora_horario", true)
+        .eq("escalas.equipes.eventos.empresa_id", empresaId),
+      supabase
+        .from("pontos")
+        .select("id, escalas!inner(equipes!inner(eventos!inner(empresa_id)))", {
+          count: "exact",
+          head: true,
+        })
+        .not("foto_url", "is", null)
+        .lte("selfie_expira_em", emTresDias)
+        .gte("selfie_expira_em", new Date().toISOString())
+        .eq("escalas.equipes.eventos.empresa_id", empresaId),
+      supabase
+        .from("fechamentos")
+        .select("id, escalas!inner(equipes!inner(eventos!inner(empresa_id)))", {
+          count: "exact",
+          head: true,
+        })
+        .eq("escalas.equipes.eventos.empresa_id", empresaId)
+        .eq("status", "pendente_aprovacao"),
+      supabase
+        .from("pagamentos")
+        .select(
+          "valor, status, fechamentos!inner(escalas!inner(equipes!inner(eventos!inner(empresa_id))))",
+        )
+        .eq("fechamentos.escalas.equipes.eventos.empresa_id", empresaId),
+    ]);
 
   if (eventos.error) throw eventos.error;
   if (pagamentos.error) throw pagamentos.error;
@@ -98,24 +106,14 @@ async function carregar(empresaId: string) {
   };
 }
 
-function Cartao({
-  titulo,
-  valor,
-  to,
-}: {
-  titulo: string;
-  valor: string | number;
-  to: string;
-}) {
+function Cartao({ titulo, valor, to }: { titulo: string; valor: string | number; to: string }) {
   return (
     <Link
       to={to}
       className="rounded-md border border-border bg-card p-4 transition-colors hover:border-primary/40"
     >
       <p className="text-xs text-muted-foreground">{titulo}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
-        {valor}
-      </p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">{valor}</p>
     </Link>
   );
 }
@@ -125,13 +123,36 @@ function Painel() {
   const q = useQuery({
     queryKey: ["painel", empresaId],
     enabled: Boolean(empresaId),
-    queryFn: () => { if (!empresaId) throw new Error("Agência não encontrada."); return carregar(empresaId); },
+    queryFn: () => {
+      if (!empresaId) throw new Error("Agência não encontrada.");
+      return carregar(empresaId);
+    },
   });
-  const cobranca = useQuery({ queryKey: ["cobranca-v2", empresaId], enabled: Boolean(empresaId), queryFn: () => carregarCobranca(), refetchInterval: 30_000 });
+  const cobranca = useQuery({
+    queryKey: ["cobranca-v2", empresaId],
+    enabled: Boolean(empresaId),
+    queryFn: () => carregarCobranca(),
+    refetchInterval: 30_000,
+  });
 
   return (
     <AppShell titulo="Painel" descricao="O que precisa de atenção agora">
-      {cobranca.data ? <section className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-5"><div><h2 className="font-semibold">Plano {cobranca.data.uso.plano_nome}</h2><p className="mt-1 text-sm text-muted-foreground">{cobranca.data.uso.plano_codigo === "free" ? `${cobranca.data.uso.eventos_usados} de ${cobranca.data.uso.limite_eventos} eventos usados neste ciclo` : `${cobranca.data.uso.participacoes_usadas} participações · ${cobranca.data.ciclo.participacoes_incluidas} incluídas · ${cobranca.data.estimativa.excedentes} excedentes`} · Estimativa: {moeda(cobranca.data.estimativa.total)}</p></div><Button asChild variant="outline"><Link to="/plano">Plano e upgrade</Link></Button></section> : null}
+      {cobranca.data ? (
+        <section className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-5">
+          <div>
+            <h2 className="font-semibold">Plano {cobranca.data.uso.plano_nome}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {cobranca.data.uso.plano_codigo === "free"
+                ? `${cobranca.data.uso.eventos_usados} de ${cobranca.data.uso.limite_eventos} eventos usados neste ciclo`
+                : `${cobranca.data.uso.participacoes_usadas} participações · ${cobranca.data.ciclo.participacoes_incluidas} incluídas · ${cobranca.data.estimativa.excedentes} excedentes`}{" "}
+              · Estimativa: {moeda(cobranca.data.estimativa.total)}
+            </p>
+          </div>
+          <Button asChild variant="outline">
+            <Link to="/plano">Plano e upgrade</Link>
+          </Button>
+        </section>
+      ) : null}
       {q.isPending ? (
         <LoadingBloco linhas={4} />
       ) : q.isError ? (
@@ -139,16 +160,8 @@ function Painel() {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Cartao
-              titulo="Eventos em andamento"
-              valor={q.data.eventos.length}
-              to="/eventos"
-            />
-            <Cartao
-              titulo="Pontos a aprovar"
-              valor={q.data.pontosPendentes}
-              to="/operacao"
-            />
+            <Cartao titulo="Eventos em andamento" valor={q.data.eventos.length} to="/eventos" />
+            <Cartao titulo="Pontos a aprovar" valor={q.data.pontosPendentes} to="/operacao" />
             <Cartao
               titulo="Fechamentos a aprovar"
               valor={q.data.fechamentosPendentes}
@@ -160,15 +173,24 @@ function Painel() {
           {q.data.pontosForaHorario > 0 || q.data.selfiesExpirando > 0 ? (
             <section className="mt-4 grid gap-3 sm:grid-cols-2">
               {q.data.pontosForaHorario > 0 ? (
-                <Link to="/operacao" className="rounded-md border border-status-pendente bg-status-pendente p-3 text-status-pendente-foreground">
-                  <p className="text-sm font-semibold">{q.data.pontosForaHorario} ponto(s) fora do horário</p>
+                <Link
+                  to="/operacao"
+                  className="rounded-md border border-status-pendente bg-status-pendente p-3 text-status-pendente-foreground"
+                >
+                  <p className="text-sm font-semibold">
+                    {q.data.pontosForaHorario} ponto(s) fora do horário
+                  </p>
                   <p className="text-xs">A supervisão precisa avaliar estes registros.</p>
                 </Link>
               ) : null}
               {q.data.selfiesExpirando > 0 ? (
                 <Link to="/operacao" className="rounded-md border border-border bg-card p-3">
-                  <p className="text-sm font-semibold">{q.data.selfiesExpirando} selfie(s) expiram em até 3 dias</p>
-                  <p className="text-xs text-muted-foreground">Baixe alguma evidência necessária antes da exclusão.</p>
+                  <p className="text-sm font-semibold">
+                    {q.data.selfiesExpirando} selfie(s) expiram em até 3 dias
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Baixe alguma evidência necessária antes da exclusão.
+                  </p>
                 </Link>
               ) : null}
             </section>

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarClock, Copy, Play, Plus, RefreshCw, RotateCcw } from "lucide-react";
+import { AlertCircle, CalendarClock, Copy, Play, Plus, RefreshCw, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -244,9 +244,7 @@ function Financeiro() {
     mutationFn: (id: string) => chamarPix({ data: { pagamentoId: id } }),
     onSuccess: (r) => {
       toast.success(
-        r.taxa > 0
-          ? `Pix enviado. Taxa da plataforma: ${moeda(r.taxa)}.`
-          : "Pix enviado.",
+        r.taxa > 0 ? `Pix enviado. Taxa da plataforma: ${moeda(r.taxa)}.` : "Pix enviado.",
       );
       invalidar();
     },
@@ -315,7 +313,8 @@ function Financeiro() {
               disabled={agendarEmMassa.isPending || pagamentosSelecionados.length === 0}
               onClick={() => agendarEmMassa.mutate()}
             >
-              <CalendarClock className="size-4" /> Agendar selecionados ({pagamentosSelecionados.length})
+              <CalendarClock className="size-4" /> Agendar selecionados (
+              {pagamentosSelecionados.length})
             </Button>
           </div>
           {fila.isPending ? (
@@ -345,9 +344,7 @@ function Financeiro() {
                         checked={pagamentosSelecionados.includes(p.id)}
                         onCheckedChange={(checked) =>
                           setPagamentosSelecionados((atual) =>
-                            checked
-                              ? [...atual, p.id]
-                              : atual.filter((id) => id !== p.id),
+                            checked ? [...atual, p.id] : atual.filter((id) => id !== p.id),
                           )
                         }
                         aria-label={`Selecionar pagamento de ${freelancer?.nome ?? "colaborador"}`}
@@ -365,7 +362,10 @@ function Financeiro() {
                         </p>
                       ) : null}
                       {p?.erro ? (
-                        <p className="mt-0.5 text-xs text-destructive">{p.erro}</p>
+                        <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-destructive">
+                          <AlertCircle className="size-3.5 shrink-0" />
+                          <span>Motivo da falha: {p.erro}</span>
+                        </div>
                       ) : null}
                       {p?.data_agendada ? (
                         <p className="mt-0.5 text-xs text-muted-foreground">
@@ -430,22 +430,22 @@ function Financeiro() {
           <section className="rounded-md border border-border bg-card p-4">
             <h2 className="mb-3 text-sm font-semibold">Cobrar cliente do evento</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-1.5">
-                  <Label>Cliente</Label>
-                  <Select value={clienteId} onValueChange={setClienteId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(auxiliares.data?.clientes ?? []).map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.nome}
-                          {c.cpf_cnpj ? "" : " (sem CPF/CNPJ)"}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-1.5">
+                <Label>Cliente</Label>
+                <Select value={clienteId} onValueChange={setClienteId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(auxiliares.data?.clientes ?? []).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nome}
+                        {c.cpf_cnpj ? "" : " (sem CPF/CNPJ)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               <div className="space-y-1.5">
                 <Label>Evento (opcional)</Label>
@@ -542,17 +542,13 @@ function Financeiro() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{c.descricao}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                         {cliente?.nome}
+                        {cliente?.nome}
                         {evento ? ` · ${evento.nome}` : ""} · vence {c.vencimento ?? "—"}
                       </p>
-                      {c.erro ? (
-                        <p className="mt-0.5 text-xs text-destructive">{c.erro}</p>
-                      ) : null}
+                      {c.erro ? <p className="mt-0.5 text-xs text-destructive">{c.erro}</p> : null}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="tabular-nums text-sm font-semibold">
-                        {moeda(c.valor)}
-                      </span>
+                      <span className="tabular-nums text-sm font-semibold">{moeda(c.valor)}</span>
                       <StatusBadge status={c.status} />
                       {c.pix_copia_cola ? (
                         <Button

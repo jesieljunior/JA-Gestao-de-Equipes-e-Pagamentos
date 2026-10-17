@@ -87,9 +87,8 @@ export const iniciarRecarga = createServerFn({ method: "POST" })
     }
 
     try {
-      const { garantirClienteAsaas, criarCobrancaAsaas, obterPixQrCode } = await import(
-        "./asaas.server"
-      );
+      const { garantirClienteAsaas, criarCobrancaAsaas, obterPixQrCode } =
+        await import("./asaas.server");
 
       const clienteAsaasId = await garantirClienteAsaas({
         nome: empresa.nome,

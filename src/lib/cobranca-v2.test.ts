@@ -2,9 +2,27 @@ import { describe, expect, it } from "vitest";
 
 import { calcularFatura, melhorPlano, pontoDeVirada, valorComRepasse } from "./cobranca-v2";
 
-const start = { id: "s", nome: "Start", mensalidade: 299, participacoes_incluidas: 100, valor_excedente: 3 };
-const pro = { id: "p", nome: "Pro", mensalidade: 499, participacoes_incluidas: 300, valor_excedente: 2.5 };
-const scale = { id: "x", nome: "Scale", mensalidade: 899, participacoes_incluidas: 800, valor_excedente: 2 };
+const start = {
+  id: "s",
+  nome: "Start",
+  mensalidade: 299,
+  participacoes_incluidas: 100,
+  valor_excedente: 3,
+};
+const pro = {
+  id: "p",
+  nome: "Pro",
+  mensalidade: 499,
+  participacoes_incluidas: 300,
+  valor_excedente: 2.5,
+};
+const scale = {
+  id: "x",
+  nome: "Scale",
+  mensalidade: 899,
+  participacoes_incluidas: 800,
+  valor_excedente: 2,
+};
 
 describe("cobrança V2", () => {
   it("cobra mensalidade + excedente", () => {
@@ -30,7 +48,9 @@ describe("cobrança V2", () => {
   it("recalcula comparação quando o admin muda as franquias", () => {
     const superior = { ...pro, participacoes_incluidas: 120 };
     expect(pontoDeVirada(start, superior)).toBe(400);
-    expect(calcularFatura(superior, 400).total).toBeLessThanOrEqual(calcularFatura(start, 400).total);
+    expect(calcularFatura(superior, 400).total).toBeLessThanOrEqual(
+      calcularFatura(start, 400).total,
+    );
     expect(calcularFatura(superior, 399).total).toBeGreaterThan(calcularFatura(start, 399).total);
   });
 });
