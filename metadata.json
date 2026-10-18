@@ -1,0 +1,6 @@
+{
+  "name": "PayCrew",
+  "description": "Operational and financial management platform for freelance and CLT event teams, time-clock tracking, and automated billing.",
+  "permissions": [],
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

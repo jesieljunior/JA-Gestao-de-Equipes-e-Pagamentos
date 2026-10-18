@@ -1,0 +1,125 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790009248104,
+      "tag": "0000_cadastro_fiscal_pix",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790009267409,
+      "tag": "0001_vinculo_frela_clt",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790009297506,
+      "tag": "0002_tenant_isolation_and_staff_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790009339278,
+      "tag": "0003_protect_fiscal_validation",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790036941354,
+      "tag": "0004_restrict_support_direct_data_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790696955351,
+      "tag": "0005_prepare_mercado_pago_provider_transition",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790872095199,
+      "tag": "0006_harden_public_time_clock",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790872170831,
+      "tag": "0007_enforce_time_clock_sequence",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791301268785,
+      "tag": "0008_billing_v2_participacoes",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791385757509,
+      "tag": "0009_billing_v2_security_snapshots",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791574094550,
+      "tag": "0010_billing_v2_limits_evidence_cycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791999447073,
+      "tag": "0011_enable_billing_scheduler",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792081303334,
+      "tag": "0012_isolate_platform_context_and_support_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792087981396,
+      "tag": "0013_lock_platform_audits_and_webhook_ingestion",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792089131459,
+      "tag": "0014_enforce_active_roles_and_preserve_master_charge_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1792089232186,
+      "tag": "0015_correct_support_audit_context_values",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792089539021,
+      "tag": "0016_short_circuit_financial_rls_before_plan_checks",
+      "breakpoints": true
+    }
+  ]
+}

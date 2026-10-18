@@ -1,0 +1,1 @@
+CREATE POLICY "selfies_select_empresa" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'selfies-ponto' AND (storage.foldername(name))[1] = public.empresa_atual()::text);

@@ -1,0 +1,4 @@
+{
+  "$schema": "https://raw.githubusercontent.com/TanStack/router/main/packages/router-generator/schema.json",
+  "routeFileIgnorePattern": "(\\.test\\.(ts|tsx)$|README\\.md)"
+}

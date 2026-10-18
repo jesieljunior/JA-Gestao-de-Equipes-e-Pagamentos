@@ -1,0 +1,4 @@
+DROP POLICY IF EXISTS bloqueio_leitura_pagamentos_free ON public.pagamentos;
+CREATE POLICY bloqueio_leitura_pagamentos_free ON public.pagamentos AS RESTRICTIVE FOR SELECT TO authenticated USING (CASE WHEN public.tem_papel_plataforma(auth.uid(),'admin_master') THEN true WHEN public.empresa_do_fechamento(fechamento_id)=public.empresa_atual() THEN public.recurso_habilitado(public.empresa_do_fechamento(fechamento_id),'financeiro') ELSE false END);
+DROP POLICY IF EXISTS bloqueio_leitura_fechamento_free ON public.fechamentos;
+CREATE POLICY bloqueio_leitura_fechamento_free ON public.fechamentos AS RESTRICTIVE FOR SELECT TO authenticated USING (CASE WHEN public.tem_papel_plataforma(auth.uid(),'admin_master') THEN true WHEN public.empresa_da_escala(escala_id)=public.empresa_atual() THEN public.recurso_habilitado(public.empresa_da_escala(escala_id),'fechamento') ELSE false END);
