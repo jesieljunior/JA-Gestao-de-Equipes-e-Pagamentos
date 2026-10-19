@@ -13,6 +13,15 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    define: {
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
+        "https://vqkpirqipvigyqxdanau.supabase.co",
+      ),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
+        "sb_publishable_kSrIm2-vOW0quRfq-3KMRQ_s7sBRze9",
+      ),
+      "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify("vqkpirqipvigyqxdanau"),
+    },
     optimizeDeps: {
       exclude: ["@tanstack/start-server-core"],
     },
