@@ -34,26 +34,20 @@ export const carregarVisaoMaster = createServerFn({ method: "GET" })
         .select("id,empresa_id,usuario_id,iniciado_em,encerrado_em,motivo")
         .order("iniciado_em", { ascending: false }),
     ]);
-    for (const r of [
-      empresas,
-      eventos,
-      colaboradores,
-      pontos,
-      pagamentos,
-      movimentos,
-      cobrancas,
-      atendimentos,
-    ])
-      if (r.error) throw new Error("Não foi possível carregar os indicadores globais.");
+    if (empresas.error) {
+      console.error("[carregarVisaoMaster] Erro ao carregar empresas:", empresas.error);
+      throw new Error("Não foi possível carregar as empresas da plataforma.");
+    }
+
     return {
-      empresas: empresas.data ?? [],
-      eventos: eventos.data ?? [],
-      colaboradores: colaboradores.data ?? [],
-      pontos: pontos.data ?? [],
-      pagamentos: pagamentos.data ?? [],
-      movimentos: movimentos.data ?? [],
-      cobrancas: cobrancas.data ?? [],
-      atendimentos: atendimentos.data ?? [],
+      empresas: Array.isArray(empresas.data) ? empresas.data : [],
+      eventos: Array.isArray(eventos.data) ? eventos.data : [],
+      colaboradores: Array.isArray(colaboradores.data) ? colaboradores.data : [],
+      pontos: Array.isArray(pontos.data) ? pontos.data : [],
+      pagamentos: Array.isArray(pagamentos.data) ? pagamentos.data : [],
+      movimentos: Array.isArray(movimentos.data) ? movimentos.data : [],
+      cobrancas: Array.isArray(cobrancas.data) ? cobrancas.data : [],
+      atendimentos: Array.isArray(atendimentos.data) ? atendimentos.data : [],
     };
   });
 export const alterarAtivacaoSuporte = createServerFn({ method: "POST" })
