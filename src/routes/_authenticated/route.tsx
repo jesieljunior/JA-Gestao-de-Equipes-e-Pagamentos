@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated")({
         throw redirect({ to: destino });
       }
 
-      return { user: data.user, contexto: dadosAcesso.contexto };
+      return { user, contexto: dadosAcesso.contexto };
     } catch (e) {
       if (e && typeof e === "object" && "to" in e) throw e;
       throw redirect({ to: "/auth" });
