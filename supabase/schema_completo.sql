@@ -1,3 +1,14 @@
+-- Reset completo do schema public para execucao limpa sem conflitos
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO anon;
+GRANT ALL ON SCHEMA public TO authenticated;
+GRANT ALL ON SCHEMA public TO service_role;
+
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- ============ ENUMS ============
 create type public.papel_usuario as enum ('admin','coordenador','financeiro','supervisor');
 create type public.status_evento as enum ('planejamento','escala','confirmacoes','pronto','em_execucao','encerrando','fechamento','pagamento','concluido','arquivado','cancelado');
