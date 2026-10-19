@@ -11,7 +11,6 @@ import {
 import { useEffect, useMemo, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -38,14 +37,13 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
-  console.error(error);
   const router = useRouter();
   const reportedError = useMemo(
     () => (error instanceof Error ? error : new Error(String(error))),
     [error],
   );
   useEffect(() => {
-    reportLovableError(reportedError, { boundary: "tanstack_root_error_component" });
+    console.error("[RootError]", reportedError);
   }, [reportedError]);
 
   return (
