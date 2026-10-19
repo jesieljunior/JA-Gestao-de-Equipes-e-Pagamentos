@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { autoConfirmarEmail } from "@/lib/auth.functions";
+import { autoConfirmarEmail, cadastrarOuRedefinirUsuario } from "@/lib/auth.functions";
 import {
   carregarDadosAcesso,
   extrairTokenOuLink,
@@ -54,6 +54,7 @@ export const Route = createFileRoute("/auth")({
 function Auth() {
   const navigate = useNavigate();
   const autoConfirmar = useServerFn(autoConfirmarEmail);
+  const cadastrarOuRedefinir = useServerFn(cadastrarOuRedefinirUsuario);
   const [carregando, setCarregando] = useState(false);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -248,58 +249,41 @@ function Auth() {
   async function cadastrar(e: React.FormEvent) {
     e.preventDefault();
     setCarregando(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: senha,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
-        data: { nome },
-      },
-    });
 
-    if (error) {
-      setCarregando(false);
-      toast.error(
-        error.message.includes("already registered")
-          ? "Este e-mail já tem conta. Use a aba Senha para entrar."
-          : error.message,
-      );
-      return;
-    }
-
-    // Se a sessão já foi iniciada diretamente
-    if (data.session) {
-      setCarregando(false);
-      toast.success("Conta criada e autenticada com sucesso!");
-      await redirecionarParaDestino(data.session.user);
-      return;
-    }
-
-    // Se o Supabase exigiu confirmação de e-mail, auto-confirma no backend imediatamente
     try {
-      await autoConfirmar({ data: { email } });
-      const { data: loginData, error: loginErr } = await supabase.auth.signInWithPassword({
+      const res = await cadastrarOuRedefinir({
+        data: {
+          email,
+          password: senha,
+          nome,
+        },
+      });
+
+      if (!res.sucesso) {
+        setCarregando(false);
+        toast.error(res.erro || "Falha ao processar cadastro.");
+        return;
+      }
+
+      // Login imediato com o e-mail e a senha cadastrados
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
       });
+
       setCarregando(false);
-      if (!loginErr && loginData?.user) {
-        toast.success("Conta criada e autenticada com sucesso!");
-        await redirecionarParaDestino(loginData.user);
+      if (error) {
+        toast.error("Erro ao autenticar: " + error.message);
         return;
       }
-    } catch (err) {
-      console.warn("Auto-confirmação no cadastro:", err);
-    }
 
-    setCarregando(false);
-    toast.success("Conta criada! Entrando...");
-    const { data: retryData } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
-    });
-    if (retryData?.user) {
-      await redirecionarParaDestino(retryData.user);
+      if (data.user) {
+        toast.success("Conta criada e autenticada com sucesso!");
+        await redirecionarParaDestino(data.user);
+      }
+    } catch (err) {
+      setCarregando(false);
+      toast.error(err instanceof Error ? err.message : "Erro inesperado ao cadastrar.");
     }
   }
 
