@@ -40,13 +40,13 @@ import {
 export const Route = createFileRoute("/_authenticated/freelancers")({
   head: () => ({
     meta: [
-      { title: "Freelancers — PayCrew" },
+      { title: "Freelancers — Já" },
       {
         name: "description",
         content:
           "Cadastro de freelancers da agência com CPF, função e chave Pix usada no pagamento após o fechamento do evento.",
       },
-      { property: "og:title", content: "Freelancers — PayCrew" },
+      { property: "og:title", content: "Freelancers — Já" },
       {
         property: "og:description",
         content: "Equipe freelancer da agência: dados, função e chave Pix.",
@@ -236,7 +236,7 @@ function Freelancers() {
     ]);
     const arquivo = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(arquivo, planilha, "Colaboradores");
-    XLSX.writeFile(arquivo, "modelo-colaboradores-paycrew.xlsx");
+    XLSX.writeFile(arquivo, "modelo-colaboradores-ja.xlsx");
   }
 
   async function importarArquivo(file: File) {

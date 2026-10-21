@@ -28,6 +28,7 @@ export const obterConfiguracaoMercadoPago = createServerFn({ method: "GET" })
       context.userId,
       "configuracoes.gerenciar",
     );
+    if (!empresaId) throw new Error("Organização não encontrada.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: conta, error } = await supabaseAdmin
@@ -63,6 +64,7 @@ export const salvarCredenciaisMercadoPago = createServerFn({ method: "POST" })
       context.userId,
       "configuracoes.gerenciar",
     );
+    if (!empresaId) throw new Error("Organização não encontrada.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Masked storage of access token and metadata

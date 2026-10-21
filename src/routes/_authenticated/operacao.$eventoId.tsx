@@ -9,6 +9,7 @@ import { AppShell } from "@/components/app-shell";
 import { EmptyState, ErrorState, LoadingBloco } from "@/components/states";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -35,13 +36,13 @@ export const Route = createFileRoute("/_authenticated/operacao/$eventoId")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Ponto da equipe — PayCrew" },
+      { title: "Ponto da equipe — Já" },
       {
         name: "description",
         content:
           "Aprove ou recuse os registros de ponto, lance ponto manual e registre ocorrências da equipe em campo.",
       },
-      { property: "og:title", content: "Ponto da equipe — PayCrew" },
+      { property: "og:title", content: "Ponto da equipe — Já" },
       {
         property: "og:description",
         content: "Conferência de presença e ponto durante o evento.",
@@ -92,7 +93,31 @@ function OperacaoEvento() {
         )
         .eq("evento_id", eventoId)
         .order("criado_em");
-      if (error) throw error;
+
+      if (error) {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("equipes")
+          .select(
+            "id, nome, escalas(id, status, freelancers(nome, funcao), pontos(id, tipo, metodo, registrado_em, status, foto_url, gps_lat, gps_lng), ocorrencias(id, descricao, criado_em))",
+          )
+          .eq("evento_id", eventoId)
+          .order("criado_em");
+
+        if (fallbackError) throw fallbackError;
+        return (fallbackData ?? []).map((eq) => ({
+          ...eq,
+          escalas: (eq.escalas ?? []).map((es) => ({
+            ...es,
+            pontos: (es.pontos ?? []).map((p: Record<string, unknown>) => ({
+              ...p,
+              fora_horario: p["fora_horario"] ?? false,
+              motivo_recusa: p["motivo_recusa"] ?? null,
+              selfie_expira_em: p["selfie_expira_em"] ?? null,
+            })),
+          })),
+        })) as unknown as typeof data;
+      }
+
       return data;
     },
   });
@@ -294,11 +319,11 @@ function OperacaoEvento() {
         <LoadingBloco />
       ) : equipes.isError ? (
         <ErrorState error={equipes.error} onRetry={() => equipes.refetch()} />
-      ) : equipes.data.length === 0 ? (
+      ) : !equipes.data || equipes.data.length === 0 ? (
         <EmptyState titulo="Sem equipes" descricao="Monte a equipe e a escala na tela do evento." />
       ) : (
         <div className="space-y-4">
-          {equipes.data.map((q) => {
+          {(equipes.data ?? []).map((q) => {
             const escalasFiltradas = q.escalas
               .filter((es) => es.status !== "substituido" && es.status !== "recusado")
               .filter((es) => {

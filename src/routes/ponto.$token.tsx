@@ -53,13 +53,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/ponto/$token")({
   head: () => ({
     meta: [
-      { title: "Folha de Ponto Digital — PayCrew por Swali" },
+      { title: "Folha de Ponto Digital — Já por Swali" },
       {
         name: "description",
         content:
           "Registro eletrônico de ponto para freelancers e colaboradores em campo. Check-in, intervalo e saída via celular com validação por selfie e GPS.",
       },
-      { property: "og:title", content: "Folha de Ponto Digital — PayCrew por Swali" },
+      { property: "og:title", content: "Folha de Ponto Digital — Já por Swali" },
       {
         property: "og:description",
         content: "Check-in e check-out seguro da equipe de eventos pelo celular.",
@@ -314,7 +314,7 @@ export function PaginaPonto() {
       <header className="border-b border-border bg-card/90 backdrop-blur-md sticky top-0 z-10 px-4 py-3">
         <div className="mx-auto max-w-md flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-sm text-foreground tracking-tight">PayCrew</span>
+            <span className="font-black text-base text-foreground tracking-tight">Já</span>
             <span className="text-[10px] text-muted-foreground font-medium border-l border-border pl-2">
               Folha de Ponto
             </span>
@@ -765,7 +765,7 @@ export function PaginaPonto() {
       {/* Footer Branding */}
       <footer className="border-t border-border bg-card/60 py-4 px-4 text-center text-xs text-muted-foreground space-y-1">
         <p>
-          PayCrew — Solução Corporativa por{" "}
+          Já — Gestão de Equipes e Pagamentos por{" "}
           <a
             href="https://www.swali.com.br/"
             target="_blank"

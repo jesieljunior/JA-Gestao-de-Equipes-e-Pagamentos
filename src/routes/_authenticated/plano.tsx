@@ -22,13 +22,13 @@ export const Route = createFileRoute("/_authenticated/plano")({
   loader: ({ context }) => context.queryClient.ensureQueryData(opcoes),
   head: () => ({
     meta: [
-      { title: "Plano e uso — PayCrew" },
+      { title: "Plano e uso — Já" },
       {
         name: "description",
-        content: "Participações, limites CLT e faturas do seu plano PayCrew.",
+        content: "Participações, limites CLT e faturas do seu plano Já.",
       },
-      { property: "og:title", content: "Plano e uso — PayCrew" },
-      { property: "og:description", content: "Seu ciclo, consumo e assinatura PayCrew." },
+      { property: "og:title", content: "Plano e uso — Já" },
+      { property: "og:description", content: "Seu ciclo, consumo e assinatura da plataforma Já." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -77,7 +77,7 @@ function Plano() {
       <p className="text-xs text-muted-foreground">{AVISO_CLT}</p>
       {uso.aviso_vendas ? (
         <p className="mt-3 text-sm font-medium text-primary">
-          Volume elevado: consulte a PayCrew para uma contratação personalizada.
+          Volume elevado: consulte a equipe Já para uma contratação personalizada.
         </p>
       ) : null}
       <section className="mt-8">

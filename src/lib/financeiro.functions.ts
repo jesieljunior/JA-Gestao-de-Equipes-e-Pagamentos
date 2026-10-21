@@ -1,6 +1,6 @@
 /**
  * Cobrança ao cliente do evento e Pix de saída ao freelancer.
- * O preço da PayCrew vem do plano da agência (função preco_efetivo),
+ * O preço da plataforma Já vem do plano da agência (função preco_efetivo),
  * nunca de valores editáveis pela própria agência.
  */
 

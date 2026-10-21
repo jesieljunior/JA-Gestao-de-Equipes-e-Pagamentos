@@ -52,13 +52,13 @@ export const Route = createFileRoute("/_authenticated/clientes")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Clientes — PayCrew" },
+      { title: "Clientes — Já" },
       {
         name: "description",
         content:
           "Cadastro de clientes da agência: contratantes dos eventos atendidos pelas equipes freelancers.",
       },
-      { property: "og:title", content: "Clientes — PayCrew" },
+      { property: "og:title", content: "Clientes — Já" },
       {
         property: "og:description",
         content: "Gerencie os contratantes dos eventos da sua agência.",

@@ -1,5 +1,5 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "ja-gestao",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "scan:secrets": "node scripts/scan-secrets.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -95,5 +97,6 @@
     "typescript-eslint": "^8.56.1",
     "vite": "8.1.5",
     "vitest": "^5.0.3"
-  }
+  },
+  "description": "Já — Plataforma B2B de Gestão de Equipes, Ponto Antifraude e Pagamentos Pix"
 }

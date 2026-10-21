@@ -35,13 +35,13 @@ export const Route = createFileRoute("/_authenticated/fechamento")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Fechamento de horas — PayCrew" },
+      { title: "Fechamento de horas — Já" },
       {
         name: "description",
         content:
           "Gere o fechamento de cada escala a partir dos pontos aprovados, confira horas e valores e aprove para pagamento.",
       },
-      { property: "og:title", content: "Fechamento de horas — PayCrew" },
+      { property: "og:title", content: "Fechamento de horas — Já" },
       {
         property: "og:description",
         content: "Horas trabalhadas, valores calculados e aprovação por evento.",

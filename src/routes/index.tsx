@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "PayCrew — SaaS de Equipes, Ponto e Pagamento por Swali" },
+      { title: "Já — Gestão de Equipes e Pagamentos por Swali" },
       {
         name: "description",
         content:
@@ -34,12 +34,12 @@ export const Route = createFileRoute("/")({
       },
       {
         property: "og:title",
-        content: "PayCrew — SaaS de Equipes, Ponto e Pagamento por Swali",
+        content: "Já — Gestão de Equipes e Pagamentos por Swali",
       },
       {
         property: "og:description",
         content:
-          "Plataforma empresarial Swali para agências de eventos gerenciarem equipes freelancers e CLT: escala, folha de ponto digital por QR Code e fechamento financeiro.",
+          "Plataforma empresarial Swali para agências de eventos gerenciarem equipes: escala, folha de ponto digital por QR Code e fechamento financeiro.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -95,7 +95,7 @@ function Landing() {
         <header className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-20">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3.5">
             <div className="flex items-center gap-2.5">
-              <span className="text-base font-bold tracking-tight text-foreground">PayCrew</span>
+              <span className="text-xl font-black tracking-tight text-foreground">Já</span>
               <a
                 href="https://www.swali.com.br/"
                 target="_blank"
@@ -132,7 +132,8 @@ function Landing() {
             Do primeiro convite ao Pix do freelancer, tudo no mesmo fluxo.
           </h1>
           <p className="mt-5 max-w-2xl text-base sm:text-lg text-muted-foreground leading-relaxed">
-            O <strong>PayCrew</strong> é a plataforma operacional desenvolvida pela{" "}
+            O <strong>Já — Gestão de Equipes e Pagamentos</strong> é a plataforma operacional
+            desenvolvida pela{" "}
             <a
               href="https://www.swali.com.br/"
               target="_blank"
@@ -205,7 +206,7 @@ function Landing() {
       <footer className="border-t border-border bg-card/60 py-8">
         <div className="mx-auto max-w-5xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div>
-            <p className="font-medium text-foreground">PayCrew — Gestão Operacional de Equipes</p>
+            <p className="font-medium text-foreground">Já — Gestão de Equipes e Pagamentos</p>
             <p className="mt-0.5">
               Um produto oficial desenvolvido e mantido por{" "}
               <a

@@ -39,7 +39,7 @@ import {
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({
     meta: [
-      { title: "Configurações da agência — PayCrew" },
+      { title: "Configurações da agência — Já" },
       {
         name: "description",
         content:
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { property: "og:title", content: "Configurações da agência — PayCrew" },
+      { property: "og:title", content: "Configurações da agência — Já" },
       {
         property: "og:description",
         content: "Regras de check-in, confirmação, substituição e ocorrências.",
@@ -328,7 +328,7 @@ function PlanoCobranca({
 }) {
   return (
     <section className="mt-6 max-w-2xl border-t border-border pt-5">
-      <h2 className="font-semibold">Plano {plano.plano_nome ?? "PayCrew"}</h2>
+      <h2 className="font-semibold">Plano {plano.plano_nome ?? "Já"}</h2>
       <dl className="mt-4 grid gap-4 sm:grid-cols-3">
         <div>
           <dt className="text-xs text-muted-foreground">Mensalidade</dt>
@@ -387,7 +387,7 @@ function IntegracaoMercadoPago() {
   const webhookUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/api/public/webhooks/mercadopago`
-      : "https://paycrew.com.br/api/public/webhooks/mercadopago";
+      : "https://ja.swali.com.br/api/public/webhooks/mercadopago";
 
   const conectado = statusQuery.data?.conectado ?? false;
 
@@ -400,7 +400,7 @@ function IntegracaoMercadoPago() {
             <h2 className="text-sm font-semibold text-foreground">Integração Mercado Pago</h2>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Configure suas credenciais para processamento de cobranças e faturas do SaaS PayCrew.
+            Configure suas credenciais para processamento de cobranças e faturas do SaaS Já.
           </p>
         </div>
 
@@ -424,7 +424,7 @@ function IntegracaoMercadoPago() {
           Isolamento Regulatório Financeiro
         </p>
         <p>
-          As cobranças de faturas do SaaS PayCrew ocorrem de forma 100% segregada das reservas
+          As cobranças de faturas do SaaS Já ocorrem de forma 100% segregada das reservas
           operacionais e dos pagamentos Pix dos trabalhadores.
         </p>
       </div>

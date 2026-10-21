@@ -20,6 +20,13 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Environment and secrets
+.env
+.env*.local
+.env.production
+.env.staging
+!.env.example
+
 # Third-party platform configs
 .lovable/
 

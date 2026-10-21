@@ -56,12 +56,19 @@ export const cadastrarOuRedefinirUsuario = createServerFn({ method: "POST" })
 
       if (usuarioExistente) {
         // Atualiza a senha com a que o usuário acabou de digitar e confirma o e-mail
+        const nomeExistente = (
+          usuarioExistente.user_metadata as Record<string, unknown> | undefined
+        )?.["nome"];
+        const nomeFinal = String(
+          data.nome || nomeExistente || emailLimpo.split("@")[0] || "Usuário",
+        );
+
         const { error: updErr } = await supabaseAdmin.auth.admin.updateUserById(
           usuarioExistente.id,
           {
             password: data.password,
             email_confirm: true,
-            user_metadata: { nome: data.nome || usuarioExistente.user_metadata?.nome || "" },
+            user_metadata: { nome: nomeFinal },
           },
         );
         if (updErr) throw updErr;
@@ -70,19 +77,21 @@ export const cadastrarOuRedefinirUsuario = createServerFn({ method: "POST" })
         await supabaseAdmin.from("usuarios").upsert({
           id: usuarioExistente.id,
           email: emailLimpo,
-          nome: data.nome || usuarioExistente.user_metadata?.nome || emailLimpo.split("@")[0],
+          nome: nomeFinal,
           ativo: true,
         });
 
         return { sucesso: true, usuarioId: usuarioExistente.id };
       }
 
+      const nomeCriar = String(data.nome || emailLimpo.split("@")[0] || "Usuário");
+
       // Cria o novo usuário com email confirmado diretamente
       const { data: novoUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
         email: emailLimpo,
         password: data.password,
         email_confirm: true,
-        user_metadata: { nome: data.nome || emailLimpo.split("@")[0] },
+        user_metadata: { nome: nomeCriar },
       });
 
       if (createErr || !novoUser.user) {
@@ -93,7 +102,7 @@ export const cadastrarOuRedefinirUsuario = createServerFn({ method: "POST" })
       await supabaseAdmin.from("usuarios").upsert({
         id: novoUser.user.id,
         email: emailLimpo,
-        nome: data.nome || emailLimpo.split("@")[0],
+        nome: nomeCriar,
         ativo: true,
       });
 

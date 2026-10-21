@@ -1,5 +1,5 @@
 /**
- * Núcleo do Pix de saída ao freelancer sem taxa percentual da PayCrew.
+ * Núcleo do Pix de saída ao freelancer sem taxa percentual da Já.
  * Recebe o cliente Supabase de fora para servir tanto a agência (RLS do
  * usuário) quanto o suporte da plataforma (cliente administrativo).
  */
@@ -106,7 +106,7 @@ export async function enviarPix(supabase: any, pagamentoId: string, empresaId?: 
     const transferencia = await transferirPix({
       valor,
       chavePix,
-      descricao: `PayCrew — ${freelancer?.nome ?? "freelancer"} · ${evento?.nome ?? "evento"}`,
+      descricao: `Já — ${freelancer?.nome ?? "freelancer"} · ${evento?.nome ?? "evento"}`,
       referenciaExterna: pagamento.id,
       chaveIdempotencia: pagamento.chave_idempotencia,
     });

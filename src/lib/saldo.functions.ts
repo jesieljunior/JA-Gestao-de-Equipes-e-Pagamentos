@@ -59,7 +59,7 @@ export const iniciarRecarga = createServerFn({ method: "POST" })
       .insert({
         empresa_id: empresaId,
         tipo: "aporte_agencia",
-        descricao: "Recarga de saldo PayCrew",
+        descricao: "Recarga de saldo Já",
         valor: data.valor,
         forma: data.forma,
         vencimento,
@@ -103,7 +103,7 @@ export const iniciarRecarga = createServerFn({ method: "POST" })
         valor: data.valor,
         forma: data.forma,
         vencimento,
-        descricao: "Recarga de saldo PayCrew",
+        descricao: "Recarga de saldo Já",
         referenciaExterna: registro.id,
       });
 

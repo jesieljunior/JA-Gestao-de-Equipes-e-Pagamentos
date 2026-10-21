@@ -1,6 +1,6 @@
 {
-  "name": "PayCrew",
-  "description": "Operational and financial management platform for freelance and CLT event teams, time-clock tracking, and automated billing.",
+  "name": "Já — Gestão de Equipes e Pagamentos",
+  "description": "Plataforma de gestão operacional e financeira para agências de eventos e empresas: colaboradores, escalas, registro de ponto, fechamentos e pagamentos.",
   "permissions": [],
   "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

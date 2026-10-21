@@ -1,151 +1,136 @@
-# PayCrew — Plataforma B2B de Gestão de Equipes, Ponto Antifraude e Pagamentos Pix em Lote
+# Já — Gestão de Equipes e Pagamentos
 
-> **SaaS corporativo de alta confiabilidade para agências de casting, promotores e produtoras de eventos.**  
-> Desenvolvido em **TypeScript Full-Stack**, **TanStack Start**, **React**, **PostgreSQL (Supabase)** e integrado à **API Bancária do Asaas**.
+[![CI](https://github.com/seu-usuario/ja-gestao/actions/workflows/ci.yml/badge.svg)](https://github.com/seu-usuario/ja-gestao/actions/workflows/ci.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb.svg)](https://react.dev/)
+[![TanStack Start](https://img.shields.io/badge/TanStack_Start-1.121-orange.svg)](https://tanstack.com/start)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL_RLS-3ecf8e.svg)](https://supabase.com/)
+[![Tests](https://img.shields.io/badge/Tests-99_passing-brightgreen.svg)](docs/TESTES.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+> **Plataforma B2B em desenvolvimento para gestão operacional de equipes, folha de ponto digital em campo com selfie e geofencing, fechamento de escalas e conciliação de repasses Pix validados em ambiente sandbox.**  
+> Desenvolvido em **TypeScript Full-Stack**, **TanStack Start**, **React 19**, **PostgreSQL gerenciado (Supabase)** e **Drizzle ORM**.
 
 ---
 
 ## 📌 Visão Geral do Produto
 
-Agências de eventos enfrentam desafios operacionais e fiscais críticos:
-1. **Fraudes em ponto de campo:** freelancers que registram entrada sem estar no local ou compartilham links.
-2. **Fechamento manual caótico:** conferência de horas, faltas e diárias em planilhas sujeitas a erros humanos.
-3. **Confusão patrimonial e fiscal:** mistura entre o dinheiro recebido dos clientes contratantes (funding de diárias) e a margem de receita própria da agência.
-4. **Fricção bancária:** pagamento individual manual via Pix de dezenas de profissionais ao término de cada evento.
+Agências de casting, produtoras de eventos e empresas de terceirização enfrentam desafios operacionais e fiscais críticos no dia a dia:
 
-O **PayCrew** resolve essas dores em um único sistema ponta a ponta:
-- **Ponto Digital em Campo:** check-in/out via celular com leitura de QR Code rotativo com expiração automática, geofencing por GPS com raio de tolerância configurável e validação por selfie.
-- **Fechamento Automatizado:** cálculo de horas trabalhadas, horas extras e valor líquido a pagar com conferência em tela única.
-- **Tesouraria com Segregação Rígida de Saldos:** visão clara e isolada entre saldo real bancário, saldo aportado por clientes em custódia e faturamento da agência.
-- **Repasses Pix em Lote:** integração com Asaas para liquidação automática e rastreamento em 30, 60 e 90 dias.
+1. **Fraudes em ponto de campo:** colaboradores que registram entrada sem estar no local ou compartilham links.
+2. **Fechamento manual caótico:** conferência de horas, intervalos e diárias em planilhas manuais sujeitas a falhas.
+3. **Confusão patrimonial e fiscal:** mistura entre os adiantamentos recebidos dos clientes contratantes (*funding* em custódia de diárias) e a margem de receita própria da agência.
+4. **Fricção bancária:** repasses individuais manuais via Pix para dezenas de profissionais ao término de cada escala.
+
+A plataforma **Já** atua em um fluxo operacional unificado:
+- **Ponto Digital em Campo:** check-in/out via celular do colaborador com leitura de QR Code dinâmico (expiração em 12h), geofencing por GPS (cálculo Haversine) e registro de selfie para conferência humana pelo supervisor.
+- **Fechamento Operacional:** apuração de horas trabalhadas, horas extras e valor líquido com conferência em tela única e aprovação pelo coordenador.
+- **Tesouraria com Segregação de Saldos:** separação contábil clara e isolada entre saldo real bancário, saldo aportado por clientes em custódia (*funding*) e receita de agência.
+- **Repasses Pix e Webhooks:** integração com gateway bancário (Asaas em ambiente sandbox) com idempotência transacional contra duplicidade de créditos.
 
 ---
 
 ## 🚀 Arquitetura e Stack Tecnológica
 
-| Camada | Tecnologia | Motivação da Escolha |
+| Camada | Tecnologia | Papel no Projeto |
 | :--- | :--- | :--- |
-| **Full-Stack Framework** | [TanStack Start](https://tanstack.com/start) + [React](https://react.dev/) | SSR performante, type-safety de ponta a ponta e Server Functions executadas exclusivamente no servidor. |
-| **Linguagem** | [TypeScript](https://www.typescriptlang.org/) | Tipagem estrita, interfaces de domínio consolidadas e zero tolerância a tipos soltos (`any`). |
-| **Banco de Dados & Auth** | [PostgreSQL (Supabase)](https://supabase.com/) | Transações atômicas ACID, Row Level Security (RLS) multi-tenant e Stored Procedures para conciliação contábil. |
-| **Estilização & UI** | [Tailwind CSS](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) | Design system sóbrio, responsivo e com alta usabilidade operacional em dispositivos móveis e desktop. |
-| **Gateway Bancário** | [Asaas API v3](https://docs.asaas.com/) | Emissão de cobranças Pix para contratantes, split de pagamentos e liquidação de Pix em lote. |
-| **Testes Automatizados** | [Vitest](https://vitest.dev/) | 82 testes cobrindo regras de negócio, tesouraria, autorização RBAC e idempotência de webhooks. |
+| **Full-Stack Framework** | [TanStack Start](https://tanstack.com/start) + [React 19](https://react.dev/) | SSR performante, type-safety de ponta a ponta e Server Functions executadas no servidor. |
+| **Linguagem** | [TypeScript](https://www.typescriptlang.org/) | Tipagem estrita com modo estrito de propriedades (`exactOptionalPropertyTypes`). |
+| **Banco de Dados & Auth** | [PostgreSQL (Supabase)](https://supabase.com/) | Runtime de produção, Row Level Security (RLS) multi-tenant e autenticação GoTrue. |
+| **Schema as Code** | [Drizzle ORM](https://orm.drizzle.team/) | Definição declarativa de schemas (`drizzle/schema.ts`), migrações e tipagem de domínio. |
+| **Estilização & UI** | [Tailwind CSS 4](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) | Design system sóbrio e responsivo construído para alta densidade de informação operacional. |
+| **Gateway de Pagamento** | [Asaas API v3 (Sandbox)](https://docs.asaas.com/) | Cobranças Pix e liquidações testadas em ambiente controlado de homologação. |
+| **Testes Automatizados** | [Vitest](https://vitest.dev/) | 22 suítes e 99 testes cobrindo multi-tenancy, idempotência, tesouraria e regras de ponto. |
 
 ---
 
-## 🏗️ Módulos Principais do Sistema
+## 🗄️ Divisão de Papéis: Drizzle ORM vs. Supabase (PostgreSQL)
 
-### 1. Ponto Eletrônico Antifraude (`/ponto/$token`)
-- **QR Code Dinâmico e Rotativo:** o coordenador do evento projeta ou disponibiliza o QR Code no local. O token expira automaticamente 12 horas após o término do evento.
-- **Geofencing (Cálculo Haversine):** a geolocalização do dispositivo do colaborador é validada contra as coordenadas do local do evento (tolerância máxima configurável de 300m a 1000m).
-- **Selfie com Auditoria Humana:** registro de imagem capturada diretamente pela câmera para auditoria visual de identidade, com consentimento explícito e expiração/expurgo automático de conformidade (LGPD).
-- **Sequência Estrita e Ordenada:** a máquina de estados impede batidas incorretas (`Entrada` ➔ `Início de Intervalo` ➔ `Fim de Intervalo` ➔ `Saída`).
-- **Rate Limiting Antibruteforce:** proteção contra tentativas repetitivas de adivinhação de token ou CPF (limite de 20 tentativas por IP a cada 10 minutos).
+O projeto divide intencionalmente as responsabilidades de banco de dados:
 
-### 2. Fechamento Operacional e Financeiro (`/fechamento` & `/operacao`)
-- **Painel de Operação em Tempo Real:** supervisão ao vivo de quem está em campo, quem entrou com atraso e alertas de ponto fora de horário.
-- **Aprovação Granular:** o supervisor ajusta horários, aceita ou contesta justificativas antes de fechar a folha.
-- **Fechamento Atômico em Banco:** procedure SQL (`fechar_evento`) que valida ponto a ponto, calcula o total a pagar e cria as ordens de pagamento em lote sem risco de inconsistência.
-
-### 3. Tesouraria Segregada e Gestão de Saldos (`/saldo`)
-O modelo financeiro foi construído para evitar bitributação e confusão contábil:
-- **Saldo Real em Conta:** total de liquidez real disponível na conta bancária para execução de lotes Pix.
-- **Aportado por Clientes (Custódia):** recurso transferido pelo contratante do evento para cobrir as diárias dos freelancers.
-- **Pendente de Entrar:** faturas e cobranças Pix emitidas para clientes com vencimento futuro.
-- **Histórico Filtrável (30, 60 e 90 dias):** acompanhamento consolidado do volume de repasses e taxa de sucesso bancário.
-- **Balanço Individual por Cliente:** tabela que audita quanto cada cliente colocou, quanto já foi repassado aos seus eventos e quanto ainda resta sob custódia.
-
-### 4. Gestão Multi-Tenant e Controle de Acesso (RBAC)
-Isolamento estrito entre agências através de Row Level Security (RLS) no PostgreSQL:
-- **`admin`:** acesso irrestrito a configurações, planos, financeiro, eventos e equipe.
-- **`coordenador`:** gestão completa de eventos, escalas e operação em campo.
-- **`supervisor`:** restrito à supervisão da operação em tempo real e validação de pontos.
-- **`financeiro`:** focado em tesouraria, aprovação de fechamentos, cobranças e relatórios fiscais.
+- **Supabase (PostgreSQL 15+):** É o **motor de execução em tempo real** e a **fronteira de segurança**. Executa as políticas de Row Level Security (RLS) que garantem isolamento estrito entre empresas (`empresa_atual()`), controla autenticação, sessões e gatilhos atômicos de conciliação.
+- **Drizzle ORM:** Atua como **Schema-as-Code** e **gerador de tipagem**. Centralizado em `drizzle/schema.ts`, mantém o modelo relacional tipado em TypeScript para consumo seguro pelas Server Functions, sem sobrecarga de queries lentas ou camadas ORM pesadas em runtime.
 
 ---
 
-## 🧪 Qualidade de Software e Cobertura de Testes
+## 📋 Status de Funcionalidades (Implementado vs. Planejado)
 
-O projeto conta com **82 testes automatizados** rodando com 100% de aprovação no Vitest:
+Para máxima transparência técnica, o estado de cada capacidade do sistema é catalogado abaixo (conforme detalhado em [`roadmap.md`](roadmap.md)):
 
-```bash
-✓ src/routes/_authenticated/financeiro-fechamento.test.ts (6 tests)
-✓ src/routes/_authenticated/cadastros.test.ts (5 tests)
-✓ src/routes/_authenticated/saldo.test.ts (3 tests)
-✓ src/routes/_authenticated/eventos.test.ts (5 tests)
-✓ src/routes/_authenticated/operacao.test.ts (3 tests)
-✓ src/routes/_authenticated/configuracoes-plano.test.ts (3 tests)
-✓ src/routes/_authenticated/plataforma-admin-suporte.test.ts (4 tests)
-✓ src/routes/_authenticated/painel-onboarding.test.ts (2 tests)
-✓ src/routes/_authenticated/fiscal-relatorios.test.ts (3 tests)
-✓ src/routes/ponto.$token.test.ts (5 tests)
-✓ src/routes/api/routes.test.ts (3 tests)
-✓ src/lib/autorizacao.test.ts (10 tests)
-✓ src/lib/auth-navigation.test.ts (11 tests)
-✓ src/lib/tesouraria.test.ts (3 tests)
-✓ src/lib/fechamento.test.ts (4 tests)
-✓ src/lib/cobranca-v2.test.ts (6 tests)
-✓ src/lib/webhook-idempotencia.test.ts (2 tests)
-✓ src/lib/folha-clt.test.ts (2 tests)
-✓ src/lib/moeda.test.ts (2 tests)
-
-Test Files  19 passed (19)
-     Tests  82 passed (82)
-```
+| Módulo / Funcionalidade | Status | Detalhes |
+| :--- | :---: | :--- |
+| **Isolamento Multi-Tenant Estrito** | ✅ Implementado | RLS em todas as tabelas de negócio; comprovado por testes automatizados de cross-tenant. |
+| **Ponto Mobile Antifraude** | ✅ Implementado | QR Code com expiração de 12h, tolerância GPS Haversine e selfie para auditoria do supervisor. |
+| **Máquina de Estados de Marcações** | ✅ Implementado | Sequência estrita `Entrada ➔ Início Intervalo ➔ Fim Intervalo ➔ Saída`; rejeição de duplicatas. |
+| **Segregação de Saldos em Tesouraria** | ✅ Implementado | Separação contábil entre adiantamento de clientes (*funding* em custódia) e receita própria. |
+| **Faturamento SaaS V2** | ✅ Implementado | Planos por participações deduplicadas com precificação imutável congelada por ciclo. |
+| **Ingestão Idempotente de Webhooks** | ✅ Implementado | Tabela `webhook_eventos` com hash determinístico e proteção contra duplo crédito. |
+| **Perfis e Acesso Suporte Auditado** | ✅ Implementado | RBAC (`admin`, `coordenador`, `suporte`, `master`); suporte falha fechado sem ticket ativo. |
+| **Repasses Pix em Sandbox** | ✅ Implementado | Fluxo de disparo de Pix homologado e simulado em ambiente Asaas Sandbox. |
+| **Validação Cadastral Frela vs CLT** | ✅ Implementado | Validações fiscais de CPF, PIS, chave Pix e separação de rotinas de cálculo. |
+| **Suíte de Testes Automatizados** | ✅ Implementado | 22 arquivos de teste e 99 testes automatizados com 100% de aprovação no Vitest. |
+| **Pipeline de Integração Contínua (CI)** | ✅ Implementado | GitHub Actions com lint, typecheck, varredura de segredos e execução de testes. |
+| **Containerização Docker** | ✅ Implementado | `Dockerfile` multi-stage com usuário não-root e `docker-compose.yml` para ambiente local. |
+| **Validação em Ambiente Publicado** | 🔄 Em Andamento | Testes integrados com preview final e homologação de sessão de suporte. |
+| **Rotina Automática de Expurgo LGPD** | 🔄 Em Andamento | Cron job para limpeza física de fotos de selfie após expiração do período de retenção. |
+| **Split Nativo de Pagamentos** | 📋 Planejado | Divisão automática de recebíveis entre agência e múltiplos prestadores no gateway. |
+| **Transição de Gateway (Mercado Pago)** | 📋 Planejado | Homologação de conta agregada com checkout transparente para novas agências. |
+| **Rastreamento em 30/60/90 Dias** | 📋 Planejado | Painel estendido de projeção de fluxo de caixa e provisionamento de diárias a longo prazo. |
 
 ---
 
-## 💻 Como Rodar o Projeto Localmente
+## 🛠️ Como Executar Localmente
 
 ### Pré-requisitos
-- **Node.js** v20+ ou v22+
-- Gerenciador de pacotes **npm** ou **bun**
+- **Node.js 22+**
+- **npm** (gerenciador oficial padronizado do projeto)
 
-### Instalação
+### 1. Clonar o Repositório
 ```bash
-# 1. Clone o repositório
-git clone https://github.com/jesieljunior/pagmini.git
-cd pagmini
+git clone https://github.com/seu-usuario/ja-gestao.git
+cd ja-gestao
+```
 
-# 2. Instale as dependências
+### 2. Instalar Dependências
+```bash
 npm install
+```
 
-# 3. Configure as variáveis de ambiente
+### 3. Configurar Variáveis de Ambiente
+Copie o arquivo de exemplo e preencha com suas credenciais de sandbox/desenvolvimento:
+```bash
 cp .env.example .env
 ```
 
-### Variáveis de Ambiente Necessárias (`.env`)
-```ini
-# Supabase (Banco de Dados e Auth)
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
-SUPABASE_URL=https://seu-projeto.supabase.co
-SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
-SUPABASE_SERVICE_ROLE_KEY=sua-chave-service-role
-
-# Asaas (Gateway Bancário e Pix)
-ASAAS_API_KEY=sua-chave-api-asaas
-ASAAS_ENVIRONMENT=sandbox # ou "producao"
-ASAAS_WEBHOOK_SECRET=token-secreto-configurado-no-asaas
-
-# Segurança e Cron
-CRON_SECRET=chave-secreta-para-disparar-crons
-```
-
-### Executar em Desenvolvimento
+### 4. Executar em Modo de Desenvolvimento
 ```bash
 npm run dev
 # Acesse no navegador: http://localhost:3000
 ```
 
-### Executar Testes e Validação
+### 5. Executar com Docker
 ```bash
-# Rodar todos os testes unitários e de integração
+docker compose up --build
+```
+
+---
+
+## 🧪 Qualidade, Segurança e Testes
+
+A integridade do código é mantida através de comandos padronizados:
+
+```bash
+# Executar todos os 99 testes automatizados (Vitest)
 npm run test
 
-# Verificar formatação e análise estática de código
+# Verificação estática de tipos (TypeScript)
+npm run typecheck
+
+# Análise de padrões de código (ESLint)
 npm run lint
+
+# Varredura de segredos e conformidade com LGPD
+npm run scan:secrets
 
 # Compilar para produção
 npm run build
@@ -153,18 +138,31 @@ npm run build
 
 ---
 
-## 🚢 Deploy em Produção
+## 🚢 Como Implantar
 
-O projeto foi desenhado para deploy contínuo na **Vercel** ou **Cloud Run**:
-1. Conecte o repositório GitHub na **Vercel**.
-2. O framework preset é reconhecido automaticamente (**TanStack Start**).
-3. Adicione as variáveis de ambiente de produção no painel da Vercel.
-4. Configure o apontamento CNAME do seu domínio corporativo (ex: `app.swali.com.br`).
-5. Cadastre o webhook no painel do Asaas apontando para:  
-   `https://app.swali.com.br/api/public/webhooks/asaas`
+O projeto pode ser implantado em qualquer provedor com suporte a Node.js ou contêineres Docker (ex: Vercel, Cloud Run, Render, VPS):
+
+1. Conecte o repositório no seu provedor de nuvem.
+2. Defina o comando de build como `npm run build` e o comando de start como `npm run preview` (ou execute a imagem `Dockerfile`).
+3. Configure as variáveis de ambiente descritas em `.env.example` no painel do provedor:
+   - `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `ASAAS_API_KEY`, `ASAAS_ENVIRONMENT=sandbox` e `ASAAS_WEBHOOK_TOKEN`
+4. Aponte o domínio corporativo (ex: `app.seudominio.com.br`) via registro DNS.
+5. Cadastre o webhook no painel do gateway apontando para:
+   `https://app.seudominio.com.br/api/public/webhooks/asaas`
 
 ---
 
-## 📄 Licença e Propriedade
+## 🔒 Segurança, LGPD e Auditoria de Segredos
 
-Desenvolvido para **Swali Soluções / PayCrew**. Todos os direitos reservados.
+- **Isolamento de Tenants:** O acesso a dados é blindado por RLS no banco de dados. Um tenant nunca consegue visualizar ou alterar registros de outra empresa.
+- **Conformidade LGPD:** As fotos de ponto são utilizadas exclusivamente para conferência humana de identidade, coletadas com consentimento explícito e sujeitas a política de retenção temporal.
+- **Zero Segredos no Código:** O repositório é auditado pelo script `scripts/scan-secrets.mjs`, garantindo que chaves privadas, senhas reais e CPFs verdadeiros nunca sejam comitados.
+
+---
+
+## 📄 Titularidade e Licença
+
+**Já — Gestão de Equipes e Pagamentos** é um projeto próprio de plataforma SaaS B2B desenvolvido por engenharia de software independente.  
+Distribuído sob a licença [MIT](LICENSE).

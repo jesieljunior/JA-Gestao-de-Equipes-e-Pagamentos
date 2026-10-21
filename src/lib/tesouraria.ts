@@ -1,5 +1,5 @@
 /**
- * Módulo de Tesouraria, Balanço e Repasses Pix do PayCrew.
+ * Módulo de Tesouraria, Balanço e Repasses Pix da Já.
  * Modelo funcional para agências de casting, promotores e produtoras de eventos:
  * - Saldo Real Disponível em Conta
  * - Saldo Aportado / Colocado pelos Clientes

@@ -14,16 +14,16 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Criar agência — PayCrew" },
+      { title: "Criar agência — Já" },
       {
         name: "description",
         content:
-          "Cadastre sua agência de eventos no PayCrew para começar a escalar equipes, registrar ponto e pagar freelancers.",
+          "Cadastre sua agência no Já para começar a escalar equipes, registrar ponto e pagar colaboradores.",
       },
-      { property: "og:title", content: "Criar agência — PayCrew" },
+      { property: "og:title", content: "Criar agência — Já" },
       {
         property: "og:description",
-        content: "Primeiro passo no PayCrew: cadastrar a agência de eventos.",
+        content: "Primeiro passo no Já: cadastrar a agência.",
       },
     ],
   }),
@@ -46,7 +46,12 @@ function Onboarding() {
       if (authUser.user) {
         await supabase.from("usuarios").upsert({
           id: authUser.user.id,
-          nome: authUser.user.user_metadata?.nome || nome.trim() || "Administrador",
+          nome:
+            ((authUser.user.user_metadata as Record<string, unknown> | undefined)?.[
+              "nome"
+            ] as string) ||
+            nome.trim() ||
+            "Administrador",
           email: authUser.user.email ?? "",
           ativo: true,
         });
@@ -65,7 +70,7 @@ function Onboarding() {
       return;
     }
     await queryClient.invalidateQueries();
-    toast.success("Agência criada. Bem-vindo ao PayCrew!");
+    toast.success("Agência criada. Bem-vindo ao Já — Gestão de Equipes e Pagamentos!");
     navigate({ to: "/painel", replace: true });
   }
 

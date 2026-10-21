@@ -57,6 +57,6 @@ describe("Rotas de API: /api/public e /api/internal", () => {
 
     const prontos = validarLoteAgendado(lista);
     expect(prontos.length).toBe(1);
-    expect(prontos[0].id).toBe("1");
+    expect(prontos[0]?.id).toBe("1");
   });
 });

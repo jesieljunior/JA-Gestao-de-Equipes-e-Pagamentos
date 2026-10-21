@@ -42,12 +42,12 @@ const STATUS = {
 export const Route = createFileRoute("/_authenticated/documentos-fiscais")({
   head: () => ({
     meta: [
-      { title: "Documentos fiscais | PayCrew" },
+      { title: "Documentos fiscais | Já" },
       {
         name: "description",
         content: "Registro e armazenamento privado de notas, DANFE, RPA e recibos da operação.",
       },
-      { property: "og:title", content: "Documentos fiscais | PayCrew" },
+      { property: "og:title", content: "Documentos fiscais | Já" },
       {
         property: "og:description",
         content: "Arquivo privado de documentos fiscais e comprovantes da operação.",

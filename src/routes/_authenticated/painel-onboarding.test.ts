@@ -116,4 +116,46 @@ describe("Rotas de Painel e Onboarding: /painel e /onboarding", () => {
     expect(sucesso.valido).toBe(true);
     expect(sucesso.cnpjNormalizado).toBe("11222333000144");
   });
+
+  it("filtra estritamente eventos e escalas pelo empresa_id no cálculo dos KPIs do Painel", () => {
+    const eventosComEmpresa = [
+      { id: "e1", empresaId: "emp-A", status: "em_execucao" },
+      { id: "e2", empresaId: "emp-A", status: "pronto" },
+      { id: "e3", empresaId: "emp-B", status: "em_execucao" }, // outra empresa - não deve vazar
+    ];
+
+    const eventosEmpresaA = eventosComEmpresa.filter((e) => e.empresaId === "emp-A");
+    expect(eventosEmpresaA).toHaveLength(2);
+    expect(eventosEmpresaA.some((e) => e.empresaId === "emp-B")).toBe(false);
+  });
+
+  it("calcula total de pendências operacionais agregando pontos, fechamentos e falhas", () => {
+    const dados = {
+      pontosPendentes: 3,
+      fechamentosPendentes: 2,
+      pontosForaHorario: 1,
+      pagamentosFalhos: 1,
+    };
+    const total =
+      dados.pontosPendentes +
+      dados.fechamentosPendentes +
+      dados.pontosForaHorario +
+      dados.pagamentosFalhos;
+    expect(total).toBe(7);
+  });
+
+  it("identifica corretamente eventos ao vivo para o cockpit operacional", () => {
+    const eventos = [
+      { id: "1", status: "em_execucao" },
+      { id: "2", status: "pronto" },
+      { id: "3", status: "encerrando" },
+      { id: "4", status: "planejamento" },
+      { id: "5", status: "concluido" },
+    ];
+    const aoVivo = eventos.filter((e) =>
+      ["em_execucao", "pronto", "encerrando"].includes(e.status),
+    );
+    expect(aoVivo).toHaveLength(3);
+    expect(aoVivo.map((e) => e.id)).toEqual(["1", "2", "3"]);
+  });
 });

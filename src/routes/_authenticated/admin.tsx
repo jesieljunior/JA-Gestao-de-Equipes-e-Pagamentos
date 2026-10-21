@@ -30,13 +30,13 @@ import { revisarCadastroFiscal } from "@/lib/fiscal.functions";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Administração PayCrew" },
+      { title: "Administração Já" },
       {
         name: "description",
         content:
           "Gestão das agências assinantes: planos, períodos de teste, cupons, bloqueios e receita da plataforma.",
       },
-      { property: "og:title", content: "Administração PayCrew" },
+      { property: "og:title", content: "Administração Já" },
       {
         property: "og:description",
         content: "Planos, trials, cupons, bloqueios e receita da plataforma.",
@@ -58,7 +58,7 @@ function Admin() {
 
   if (isPending) {
     return (
-      <AppShell titulo="Administração PayCrew">
+      <AppShell titulo="Administração Já">
         <LoadingBloco />
       </AppShell>
     );
@@ -66,10 +66,10 @@ function Admin() {
 
   if (!ehAdminMaster) {
     return (
-      <AppShell titulo="Administração PayCrew">
+      <AppShell titulo="Administração Já">
         <EmptyState
           titulo="Área restrita"
-          descricao="Somente a administração da PayCrew tem acesso a esta página."
+          descricao="Somente a administração da plataforma Já tem acesso a esta página."
         />
       </AppShell>
     );
@@ -77,7 +77,7 @@ function Admin() {
 
   return (
     <AppShell
-      titulo="Administração PayCrew"
+      titulo="Administração Já"
       descricao="Agências, planos, cupons e receita da plataforma"
     >
       <Tabs defaultValue="visao">
@@ -757,7 +757,7 @@ function Equipe() {
     onSuccess: () => {
       setUserId("");
       queryClient.invalidateQueries({ queryKey: ["admin"] });
-      toast.success("Pessoa adicionada à equipe PayCrew.");
+      toast.success("Pessoa adicionada à equipe da plataforma Já.");
     },
     onError: (e: Error) => toast.error(e.message),
   });

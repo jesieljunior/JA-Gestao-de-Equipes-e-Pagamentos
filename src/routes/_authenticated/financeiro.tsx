@@ -59,13 +59,13 @@ import {
 export const Route = createFileRoute("/_authenticated/financeiro")({
   head: () => ({
     meta: [
-      { title: "Financeiro & Pix — PayCrew" },
+      { title: "Financeiro & Pix — Já" },
       {
         name: "description",
         content:
           "Saldo real da agência, cobranças aos clientes, saldo em custódia e fila de repasses Pix para prestadores nos últimos 30, 60 e 90 dias.",
       },
-      { property: "og:title", content: "Financeiro & Pix — PayCrew" },
+      { property: "og:title", content: "Financeiro & Pix — Já" },
       {
         property: "og:description",
         content: "Saldo em conta, cobranças e repasses Pix para a equipe.",

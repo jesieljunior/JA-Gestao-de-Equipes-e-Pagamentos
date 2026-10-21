@@ -17,13 +17,13 @@ export const Route = createFileRoute("/_authenticated/relatorios")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Relatórios — PayCrew" },
+      { title: "Relatórios — Já" },
       {
         name: "description",
         content:
           "Resumo por evento: equipe, presenças, horas trabalhadas, custo total e pagamentos, com exportação em CSV.",
       },
-      { property: "og:title", content: "Relatórios — PayCrew" },
+      { property: "og:title", content: "Relatórios — Já" },
       {
         property: "og:description",
         content: "Custo, horas e pagamentos de cada evento da agência.",
@@ -97,7 +97,7 @@ function Relatorios() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `paycrew-${e.nome.toLowerCase().replace(/\W+/g, "-")}.csv`;
+    a.download = `ja-${e.nome.toLowerCase().replace(/\W+/g, "-")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("CSV exportado.");

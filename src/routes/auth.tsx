@@ -35,16 +35,16 @@ export const Route = createFileRoute("/auth")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Entrar no PayCrew" },
+      { title: "Entrar no Já — Gestão de Equipes e Pagamentos" },
       {
         name: "description",
         content:
-          "Acesse o PayCrew para gerenciar eventos, escalas, ponto em campo, fechamento de horas e pagamentos da sua agência.",
+          "Acesse o Já para gerenciar eventos, equipes, escalas, ponto em campo, fechamento de horas e pagamentos da sua agência.",
       },
-      { property: "og:title", content: "Entrar no PayCrew" },
+      { property: "og:title", content: "Entrar no Já — Gestão de Equipes e Pagamentos" },
       {
         property: "og:description",
-        content: "Acesso da agência ao painel de operação e pagamento de equipes.",
+        content: "Acesso da agência ao painel de gestão de equipes e pagamento de colaboradores.",
       },
     ],
   }),
@@ -308,9 +308,9 @@ function Auth() {
           <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary mb-2">
             <span>SaaS por Swali</span>
           </div>
-          <p className="text-2xl font-bold tracking-tight text-foreground">PayCrew</p>
-          <p className="text-xs text-muted-foreground">
-            Operação e pagamento de equipes de eventos
+          <p className="text-3xl font-black tracking-tight text-foreground">Já</p>
+          <p className="text-xs font-medium text-muted-foreground">
+            Gestão de Equipes e Pagamentos
           </p>
         </div>
 
@@ -522,7 +522,7 @@ function Auth() {
 
       <footer className="mt-8 text-center text-xs text-muted-foreground">
         <p>
-          PayCrew é um software como serviço da{" "}
+          Já é uma plataforma corporativa da{" "}
           <a
             href="https://www.swali.com.br/"
             target="_blank"

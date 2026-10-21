@@ -33,7 +33,7 @@ async function chamar<T>(
     headers: {
       access_token: chave,
       "Content-Type": "application/json",
-      "User-Agent": "PayCrew",
+      "User-Agent": "Ja-Gestao-Equipes-Pagamentos",
     },
     ...(init.body ? { body: JSON.stringify(init.body) } : {}),
   });

@@ -97,14 +97,14 @@ describe("Rotas de Operação: /operacao e /operacao.$eventoId", () => {
 
     const pendentes = filtrarEscalas(mockEscalas, "pendentes");
     expect(pendentes.length).toBe(1);
-    expect(pendentes[0].id).toBe("escala-1");
+    expect(pendentes[0]?.id).toBe("escala-1");
 
     const presentes = filtrarEscalas(mockEscalas, "presentes");
     expect(presentes.length).toBe(2);
 
     const semPonto = filtrarEscalas(mockEscalas, "sem_ponto");
     expect(semPonto.length).toBe(1);
-    expect(semPonto[0].id).toBe("escala-2");
+    expect(semPonto[0]?.id).toBe("escala-2");
   });
 
   it("exige motivo ao rejeitar ponto do colaborador", () => {

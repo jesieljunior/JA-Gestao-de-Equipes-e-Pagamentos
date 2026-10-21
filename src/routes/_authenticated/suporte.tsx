@@ -21,12 +21,12 @@ import {
 export const Route = createFileRoute("/_authenticated/suporte")({
   head: () => ({
     meta: [
-      { title: "Atendimento por empresa — PayCrew" },
+      { title: "Atendimento por empresa — Já" },
       {
         name: "description",
         content: "Atendimentos operacionais limitados e auditados por empresa.",
       },
-      { property: "og:title", content: "Atendimento por empresa — PayCrew" },
+      { property: "og:title", content: "Atendimento por empresa — Já" },
       {
         property: "og:description",
         content: "Consulta operacional de uma empresa por atendimento.",
@@ -69,7 +69,7 @@ function Suporte() {
   const empresa = q.data?.empresas.find((e) => e.id === atendimento?.empresa_id);
   return (
     <AppShell
-      titulo="Suporte PayCrew"
+      titulo="Suporte Já"
       descricao={empresa ? `Atendimento: ${empresa.nome}` : "Empresas clientes"}
     >
       {q.isPending ? (

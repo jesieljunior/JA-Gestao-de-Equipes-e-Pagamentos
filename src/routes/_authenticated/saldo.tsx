@@ -41,13 +41,13 @@ import {
 export const Route = createFileRoute("/_authenticated/saldo")({
   head: () => ({
     meta: [
-      { title: "Tesouraria & Saldo — PayCrew" },
+      { title: "Tesouraria & Saldo — Já" },
       {
         name: "description",
         content:
           "Saldo real da agência, aportes dos clientes, valores pendentes e repasses Pix nos últimos 30, 60 e 90 dias.",
       },
-      { property: "og:title", content: "Tesouraria & Saldo — PayCrew" },
+      { property: "og:title", content: "Tesouraria & Saldo — Já" },
       {
         property: "og:description",
         content: "Gestão completa de saldo, aportes de clientes e repasses Pix.",

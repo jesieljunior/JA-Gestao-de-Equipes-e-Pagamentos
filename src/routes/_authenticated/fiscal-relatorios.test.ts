@@ -81,7 +81,7 @@ describe("Rotas Fiscais e Relatórios: /documentos-fiscais e /relatorios", () =>
     const filtrados = filtrarLinhasRelatorio(itens, "2026-10-10T00:00:00Z", "2026-10-20T23:59:59Z");
 
     expect(filtrados.length).toBe(1);
-    expect(filtrados[0].id).toBe("2");
+    expect(filtrados[0]?.id).toBe("2");
   });
 
   it("sanitiza campos exportados em relatórios para prevenir formula injection", () => {

@@ -13,13 +13,13 @@ export const Route = createFileRoute("/_authenticated/operacao/")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Operação em campo — PayCrew" },
+      { title: "Operação em campo — Já" },
       {
         name: "description",
         content:
           "Acompanhe os eventos em andamento, aprove os registros de ponto da equipe e registre ocorrências.",
       },
-      { property: "og:title", content: "Operação em campo — PayCrew" },
+      { property: "og:title", content: "Operação em campo — Já" },
       {
         property: "og:description",
         content: "Presença, ponto e ocorrências dos eventos em andamento.",

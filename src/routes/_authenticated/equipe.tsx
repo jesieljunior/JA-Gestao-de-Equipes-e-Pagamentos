@@ -26,12 +26,12 @@ import { ROTULO_PAPEL, type PapelUsuario } from "@/lib/dominio";
 export const Route = createFileRoute("/_authenticated/equipe")({
   head: () => ({
     meta: [
-      { title: "Equipe e acessos | PayCrew" },
+      { title: "Equipe e acessos | Já" },
       {
         name: "description",
         content: "Gerencie os acessos e responsabilidades da equipe da agência.",
       },
-      { property: "og:title", content: "Equipe e acessos | PayCrew" },
+      { property: "og:title", content: "Equipe e acessos | Já" },
       { property: "og:description", content: "Acessos e responsabilidades da equipe da agência." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

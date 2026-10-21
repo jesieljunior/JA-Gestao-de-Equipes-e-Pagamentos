@@ -11,7 +11,7 @@ function proximoPontoPermitido(ultimoTipo: string | null): string {
   if (!ultimoTipo) return "entrada";
   const idx = SEQUENCIA_PONTOS.indexOf(ultimoTipo as (typeof SEQUENCIA_PONTOS)[number]);
   if (idx < 0 || idx >= SEQUENCIA_PONTOS.length - 1) return "concluido";
-  return SEQUENCIA_PONTOS[idx + 1];
+  return SEQUENCIA_PONTOS[idx + 1] ?? "concluido";
 }
 
 function validarSequenciaPonto(tipoNovo: string, ultimoTipo: string | null): boolean {

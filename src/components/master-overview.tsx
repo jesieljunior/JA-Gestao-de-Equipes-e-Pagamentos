@@ -170,16 +170,19 @@ export function MasterOverview() {
           [
             "A pagar",
             moeda(
-              pagamentos
-                .filter((p: unknown) =>
-                  ["pendente", "agendado"].includes(
-                    String((p as { status?: string })?.status || ""),
+              Number(
+                pagamentos
+                  .filter((p: unknown) =>
+                    ["pendente", "agendado"].includes(
+                      String((p as { status?: string })?.status || ""),
+                    ),
+                  )
+                  .reduce(
+                    (s: number, p: unknown) =>
+                      s + Number((p as { valor?: number | string })?.valor || 0),
+                    0,
                   ),
-                )
-                .reduce(
-                  (s, p: unknown) => s + Number((p as { valor?: number | string })?.valor || 0),
-                  0,
-                ),
+              ),
             ),
           ],
         ].map(([label, v]) => (

@@ -49,13 +49,13 @@ export const Route = createFileRoute("/_authenticated/eventos/$eventoId")({
     meta: [
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { title: "Evento — PayCrew" },
+      { title: "Evento — Já" },
       {
         name: "description",
         content:
           "Equipe, escala, confirmações, QR Code de ponto e avanço do ciclo do evento na sua agência.",
       },
-      { property: "og:title", content: "Evento — PayCrew" },
+      { property: "og:title", content: "Evento — Já" },
       {
         property: "og:description",
         content: "Gerencie equipe, escala e o ciclo do evento.",

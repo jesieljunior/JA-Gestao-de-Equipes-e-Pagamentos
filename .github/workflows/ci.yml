@@ -1,0 +1,43 @@
+name: CI — Qualidade, Segurança e Testes
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit-and-test:
+    name: Verificação Estática, Varredura e Testes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Instalar Dependências Estritas
+        run: npm ci
+
+      - name: Análise Estática de Código (ESLint)
+        run: npm run lint
+
+      - name: Verificação de Tipos TypeScript
+        run: npm run typecheck
+
+      - name: Varredura de Segredos e PII (LGPD)
+        run: npm run scan:secrets
+
+      - name: Executar Testes Automatizados (Vitest)
+        run: npm run test
+
+      - name: Compilar Aplicação para Produção
+        run: npm run build

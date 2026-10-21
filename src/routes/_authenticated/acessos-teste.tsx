@@ -23,12 +23,12 @@ import { criarAcessosTeste } from "@/lib/acessos.functions";
 export const Route = createFileRoute("/_authenticated/acessos-teste")({
   head: () => ({
     meta: [
-      { title: "Acessos de teste | PayCrew" },
+      { title: "Acessos de teste | Já" },
       {
         name: "description",
-        content: "Crie acessos temporários para validar os três portais da PayCrew.",
+        content: "Crie acessos temporários para validar os três portais da plataforma Já.",
       },
-      { property: "og:title", content: "Acessos de teste | PayCrew" },
+      { property: "og:title", content: "Acessos de teste | Já" },
       {
         property: "og:description",
         content: "Validação dos portais da agência, suporte e administração.",

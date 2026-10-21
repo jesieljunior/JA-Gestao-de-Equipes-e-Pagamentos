@@ -1,7 +1,6 @@
 /**
- * Regras de domínio do PayCrew, portadas do backend FastAPI original
- * (app/models/enums.py, app/services/estado_evento_service.py e
- * app/services/fechamento_service.py). Nenhum estado ou regra inventado.
+ * Regras de domínio da plataforma Já — Gestão de Equipes e Pagamentos,
+ * portadas do backend original. Nenhum estado ou regra inventado.
  */
 
 import type { Database } from "@/integrations/supabase/types";
@@ -38,8 +37,8 @@ export type Assinatura = Tabelas["assinaturas"]["Row"];
 export type PapelPlataforma = Enums["papel_plataforma"];
 
 export const ROTULO_PAPEL_PLATAFORMA: Record<PapelPlataforma, string> = {
-  admin_master: "Administração PayCrew",
-  suporte: "Suporte PayCrew",
+  admin_master: "Administração Já",
+  suporte: "Suporte Já",
 };
 
 /** Sequência oficial do PAS cap. 07. CANCELADO fica fora, é exceção. */

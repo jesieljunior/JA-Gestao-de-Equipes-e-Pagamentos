@@ -80,17 +80,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PayCrew — SaaS de Equipes e Ponto por Swali" },
+      { title: "Já — Gestão de Equipes e Pagamentos" },
       {
         name: "description",
         content:
-          "PayCrew — SaaS desenvolvido pela Swali (swali.com.br) para gestão de equipes, folha de ponto digital em campo com selfie e GPS, conferência e pagamento Pix.",
+          "Já — Plataforma B2B de gestão de equipes, folha de ponto digital em campo com selfie e GPS, conferência e repasses Pix.",
       },
-      { property: "og:title", content: "PayCrew — SaaS de Equipes e Ponto por Swali" },
+      { property: "og:title", content: "Já — Gestão de Equipes e Pagamentos" },
       {
         property: "og:description",
         content:
-          "Plataforma empresarial Swali para controle operacional de eventos, folha de ponto por QR Code e fechamento financeiro.",
+          "Plataforma para controle operacional de eventos, folha de ponto por QR Code e fechamento financeiro com Pix em lote.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
